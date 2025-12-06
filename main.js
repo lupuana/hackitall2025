@@ -6,7 +6,7 @@ console.log("✅ Main.js v44 (AUTO-HOLD SAVE) Loaded");
 const ui = {
     // Boot & FX
     bootLayer: document.getElementById('boot-layer'),
-    bootBtn: document.getElementById('engage-btn'),
+    bootBtn: document.getElementById('start-btn'),
     leverContainer: document.getElementById('engage-container'),
     console: document.getElementById('console-log'),
     criticalOverlay: document.getElementById('critical-overlay'),
@@ -26,15 +26,32 @@ const ui = {
 
     durationInput: document.getElementById('rec-duration'),
     progressBar: document.getElementById('rec-progress'),
+    progressRemaining: document.getElementById('rec-remaining'),
     statusText: document.getElementById('rec-status'),
     pitchText: document.getElementById('note-val'),
     
     sensSlider: document.getElementById('ctrl-sens'),
+
+    // Analysis panel
+    btnAnalysis: document.getElementById('btn-analysis'),
+    analysisStatus: document.getElementById('analysis-status'),
+    analysisVol: document.getElementById('analysis-vol'),
+    analysisBass: document.getElementById('analysis-bass'),
+    analysisMid: document.getElementById('analysis-mid'),
+    analysisTreble: document.getElementById('analysis-treble'),
+    analysisVar: document.getElementById('analysis-var'),
     
     // Mode Switching
     modeDJ: document.getElementById('btn-mode-dj'),
-    modeArt: document.getElementById('btn-mode-art')
+    modeArt: document.getElementById('btn-mode-art'),
+    modeLab: document.getElementById('btn-mode-lab'),
+    modeEQ: document.getElementById('btn-mode-eq')
 };
+
+const bootFrame = document.querySelector('.boot-frame');
+const bootLog = document.querySelector('.boot-log');
+
+let bootDodges = 0;
 
 let canvas, ctx;
 let isRecording = false, isPaused = false;
@@ -42,6 +59,8 @@ let startTime = 0, pausedElapsed = 0, totalDuration = 60;
 let activeMode = 'DJ'; 
 let isBufferFull = false; // Flag pentru salvare
 let overloadOn = false;
+let analysisOn = false;
+const analysisSmooth = { vol: 0, bass: 0, mid: 0, treble: 0, variability: 0 };
 
 // === BOOT SEQUENCE ===
 async function runBootSequence() {
@@ -54,17 +73,38 @@ async function runBootSequence() {
 }
 runBootSequence();
 
-ui.bootBtn.addEventListener('click', async () => {
+ui.bootBtn.addEventListener('click', async (ev) => {
+    if (bootDodges < 3) {
+        ev.preventDefault();
+        bootDodges += 1;
+        if (bootFrame && ui.bootBtn) {
+            const frameRect = bootFrame.getBoundingClientRect();
+            const btnRect = ui.bootBtn.getBoundingClientRect();
+            const pad = 60;
+            const maxX = Math.max(0, (frameRect.width / 2) - btnRect.width - pad);
+            const maxY = Math.max(0, (frameRect.height / 2) - btnRect.height - pad);
+            const dx = (Math.random() * 2 - 1) * maxX;
+            const dy = (Math.random() * 2 - 1) * maxY;
+            ui.bootBtn.style.setProperty('--dodge-x', `${dx}px`);
+            ui.bootBtn.style.setProperty('--dodge-y', `${dy}px`);
+        }
+        if (bootLog) bootLog.textContent = `[SKIP ${bootDodges}/3] BUTTON EVADED`;
+        return;
+    }
+
+    ui.bootBtn.style.setProperty('--dodge-x', '0px');
+    ui.bootBtn.style.setProperty('--dodge-y', '0px');
+    if (bootLog) bootLog.textContent = '[ENGAGE] CALIBRATING AUDIO...';
+
     try {
         await initAudio(); await ensureAudioRunning();
-        ui.leverContainer.classList.add('lever-pulled');
-        setTimeout(() => ui.bootLayer.classList.add('gates-open'), 600);
+        ui.bootLayer.classList.add('boot-hide');
         setTimeout(() => {
             ui.bootLayer.style.display = 'none';
             ui.hud.classList.remove('hidden');
             ui.bulbReset.classList.add('on');
             ui.statusText.innerText = "ONLINE"; ui.statusText.className = ""; ui.statusText.style.color = "var(--indicator-green)";
-        }, 2000);
+        }, 800);
         canvas = document.getElementById("screen");
         ctx = canvas.getContext("2d");
         resize(); window.addEventListener('resize', resize);
@@ -121,6 +161,8 @@ ui.btnReset.addEventListener('click', () => {
     
     ui.statusText.innerText = "IDLE"; ui.statusText.className = ""; ui.statusText.style.color = "var(--indicator-green)";
     ui.progressBar.style.width = '0%';
+    ui.progressRemaining.textContent = '--';
+    ui.progressRemaining.classList.remove('low-time');
     
     setPaintingParams(false, false, totalDuration); resetPainting(); 
     ui.modeDJ.click(); 
@@ -128,17 +170,36 @@ ui.btnReset.addEventListener('click', () => {
 
 ui.sensSlider.addEventListener('input', (e) => audioEngine.setSensitivity(e.target.value));
 
+ui.btnAnalysis.addEventListener('click', () => {
+    analysisOn = !analysisOn;
+    ui.analysisStatus.textContent = analysisOn ? 'ON' : 'OFF';
+    ui.analysisStatus.classList.toggle('on', analysisOn);
+    ui.analysisStatus.classList.toggle('off', !analysisOn);
+});
+
 // === MODE SWITCHING ===
 ui.modeDJ.addEventListener('click', () => { 
     setRenderMode('DJ'); activeMode = 'DJ';
     document.querySelectorAll('.toggle-switch').forEach(b => b.classList.remove('active')); 
-    ui.modeDJ.parentElement.classList.add('active'); 
+    ui.modeDJ.classList.add('active'); 
 });
 
 ui.modeArt.addEventListener('click', () => { 
     setRenderMode('ART'); activeMode = 'ART';
     document.querySelectorAll('.toggle-switch').forEach(b => b.classList.remove('active')); 
-    ui.modeArt.parentElement.classList.add('active'); 
+    ui.modeArt.classList.add('active'); 
+});
+
+ui.modeLab.addEventListener('click', () => {
+    setRenderMode('LAB'); activeMode = 'LAB';
+    document.querySelectorAll('.toggle-switch').forEach(b => b.classList.remove('active'));
+    ui.modeLab.classList.add('active');
+});
+
+ui.modeEQ.addEventListener('click', () => {
+    setRenderMode('EQ'); activeMode = 'EQ';
+    document.querySelectorAll('.toggle-switch').forEach(b => b.classList.remove('active'));
+    ui.modeEQ.classList.add('active');
 });
 
 // === SAVE LOGIC (KEY 'S') ===
@@ -165,6 +226,7 @@ window.addEventListener('keydown', (e) => {
 
 // === TERMINAL LOG ===
 function updateTerminal(note, db) {
+    if (!ui.terminalLog) return;
     if (Math.random() > 0.9) {
         const hex = Math.random().toString(16).substring(2, 6).toUpperCase();
         const line = document.createElement('div');
@@ -187,11 +249,26 @@ function loop() {
         const volPercent = audioData.volume * 100;
         updateTerminal(audioData.note, volPercent);
 
+        // slow, stable readout for analysis
+        if (analysisOn) {
+            analysisSmooth.vol = analysisSmooth.vol * 0.9 + (audioData.volume || 0) * 0.1;
+            analysisSmooth.bass = analysisSmooth.bass * 0.9 + (audioData.bass || 0) * 0.1;
+            analysisSmooth.mid = analysisSmooth.mid * 0.9 + (audioData.mid || 0) * 0.1;
+            analysisSmooth.treble = analysisSmooth.treble * 0.9 + (audioData.treble || 0) * 0.1;
+            analysisSmooth.variability = analysisSmooth.variability * 0.9 + (audioData.variability || 0) * 0.1;
+
+            ui.analysisVol.textContent = `${Math.round(analysisSmooth.vol * 100)}%`;
+            ui.analysisBass.textContent = `${Math.round(analysisSmooth.bass * 100)}%`;
+            ui.analysisMid.textContent = `${Math.round(analysisSmooth.mid * 100)}%`;
+            ui.analysisTreble.textContent = `${Math.round(analysisSmooth.treble * 100)}%`;
+            ui.analysisVar.textContent = `${Math.round(analysisSmooth.variability * 100)}%`;
+        }
+
         if (activeMode === 'DJ') {
-            const onThresh = 0.6; // apare mult mai ușor
-            const offThresh = 0.55; // hysteresis să nu pâlpâie
-            if (!overloadOn && audioData.volume > onThresh) overloadOn = true;
-            if (overloadOn && audioData.volume < offThresh) overloadOn = false;
+            const onThresh = 0.78; // apare mai ușor
+            const offThresh = 0.72; // hysteresis să nu pâlpâie
+                if (!overloadOn && audioData.volume > onThresh) overloadOn = true;
+                if (overloadOn && audioData.volume < offThresh) overloadOn = false;
 
             if (overloadOn) {
                 ui.criticalOverlay.classList.remove('hidden');
@@ -212,6 +289,10 @@ function loop() {
         let total = (pausedElapsed + current) / 1000;
         let pct = Math.min(100, (total / totalDuration) * 100);
         ui.progressBar.style.width = `${pct}%`;
+        const remaining = Math.max(0, Math.ceil(totalDuration - total));
+        ui.progressRemaining.textContent = `${remaining}s`;
+        const low = remaining <= 5 && isRecording && !isPaused;
+        ui.progressRemaining.classList.toggle('low-time', low);
         
         // Când se termină timpul
         if (total >= totalDuration) {
@@ -230,6 +311,9 @@ function loop() {
             ui.statusText.innerText = "HOLD: PRESS 'S'"; // Mesajul cerut
             ui.statusText.style.color = "var(--indicator-amber)";
             ui.statusText.className = "blink-amber";
+
+            ui.progressRemaining.textContent = '0s';
+            ui.progressRemaining.classList.add('low-time');
             
             // Înghețăm renderer-ul la ultimul cadru
             setPaintingParams(true, true, totalDuration);
