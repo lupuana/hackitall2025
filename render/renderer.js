@@ -1,7 +1,7 @@
 import { audioData } from "../audio/audioEngine.js";
 import { applyCRTEffects } from "./crtEffects.js";
 
-console.log("✅ Renderer v36 (CYBER OVERLOAD) Loaded");
+console.log("✅ Renderer v46 (HARMONIC SWARM) Loaded");
 
 let currentMode = 'DJ';
 let resetFlag = true;
@@ -11,12 +11,17 @@ let paintingState = { active: false, paused: false, duration: 30, startTime: 0, 
 let prevX = 0, prevY = 0;
 let initialized = false;
 
-// Vars
-let harmTime = 0;
-let shakeX = 0, shakeY = 0;
+// === VARS ===
+const NUM_AGENTS = 15;
+const NUM_PARTICLES = 26;
+let agents = [];
+let t = 0;
+let pulses = [];
+let particles = [];
+let sparks = [];
 
 // === EXPORTS ===
-export function setRenderMode(mode) { currentMode = mode; }
+export function setRenderMode(mode) { currentMode = mode; resetFlag = true; }
 export function setPaintingParams(active, paused, duration) {
     if (active && !paintingState.active) { paintingState.startTime = Date.now(); paintingState.elapsedBeforePause = 0; }
     if (paused && !paintingState.paused) { paintingState.elapsedBeforePause += (Date.now() - paintingState.startTime) / 1000; } 
@@ -29,142 +34,352 @@ const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 const smooth = { vol: 0, bass: 0, mid: 0, treble: 0, pitch: 0 };
 
 /* =======================
-   MODE A: CYBER WINGS OVERLOAD (DJ)
+   CLASA: HARMONIC LASER AGENT
+   - Se mișcă matematic pe orbite Lissajous/Armonice
 ========================== */
-function renderCyberWings(ctx, w, h) {
-    const cx = w / 2;
-    const cy = h / 2;
-
-    // 1. PHYSICS UPDATE
-    harmTime += 0.02 + smooth.mid * 0.05; // Viteza crește cu sunetul
-    
-    // SCREEN SHAKE (Calculăm cât de mult tremură ecranul)
-    // Doar dacă basul e puternic (> 0.6)
-    if (smooth.bass > 0.6) {
-        const shakePower = (smooth.bass - 0.6) * 30; // Intensitate
-        shakeX = (Math.random() - 0.5) * shakePower;
-        shakeY = (Math.random() - 0.5) * shakePower;
-    } else {
-        shakeX = 0; shakeY = 0;
+class HarmonicAgent {
+    constructor(w, h, id) {
+        this.w = w; this.h = h; this.id = id;
+        this.trail = [];
+        this.reset();
     }
 
-    // 2. BACKGROUND (Motion Blur)
-    ctx.globalCompositeOperation = "source-over";
-    // Dacă basul e MAXIM (Drop), facem un flash alb scurt
-    if (smooth.bass > 0.9 && Math.random() > 0.8) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.1)";
-    } else {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.2)"; // Fade normal
+    reset() {
+        // Parametri unici pentru fiecare agent (ADN-ul mișcării)
+        // Frecvențe (cât de repede oscilează pe X și Y)
+        this.fx = 1 + Math.random() * 2; 
+        this.fy = 1 + Math.random() * 2;
+        
+        // Faze (unde începe)
+        this.px = Math.random() * Math.PI * 2;
+        this.py = Math.random() * Math.PI * 2;
+        
+        // Amplitudini de bază (raza orbitei)
+        this.ampX = (this.w / 4) * (0.5 + Math.random() * 0.5);
+        this.ampY = (this.h / 3) * (0.5 + Math.random() * 0.5);
+        
+        // Culoare unică
+        this.hueBase = Math.random() * 360;
+        
+        this.x = this.w/2;
+        this.y = this.h/2;
     }
-    ctx.fillRect(0, 0, w, h);
 
-    // Aplicăm Shake-ul la tot ce urmează
-    ctx.save();
-    ctx.translate(shakeX, shakeY);
+    update(time, bass, mid, treble) {
+        const cx = this.w / 2;
+        const cy = this.h / 2;
 
-    ctx.globalCompositeOperation = "lighter"; // Neon Blend
-
-    // === FUNCȚIA DE DESENARE A ARIPILOR ===
-    // O definim ca funcție internă ca să o putem apela de 3 ori (RGB Split)
-    const drawWingsLayer = (color, offsetX, offsetY, scaleMod) => {
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2 + smooth.bass * 3;
+        // Modulare Audio
+        // Basul mărește raza
+        const currentAmpX = this.ampX * (1 + bass * 0.8);
+        const currentAmpY = this.ampY * (1 + bass * 0.8);
         
-        // Parametrii formei
-        const wingspan = w * 0.4 * (1 + smooth.bass * 0.4) * scaleMod;
-        const height = h * 0.3 * (1 + smooth.mid * 0.3) * scaleMod;
-        
-        // Câte "nervuri" desenăm
-        const layers = 5; 
+        // Mediile accelerează timpul local ușor
+        const localTime = time * (1 + mid * 0.2);
 
-        for (let l = 0; l < layers; l++) {
-            const layerNorm = l / (layers - 1);
-            ctx.beginPath();
+        // === FORMULA ARMONOGRAF PENTRU ACEST AGENT ===
+        // x = A * sin(fx * t + p)
+        // Adăugăm un termen secundar pentru complexitate (buclă în buclă)
+        
+        let nx = cx + Math.sin(localTime * this.fx + this.px) * currentAmpX +
+                      Math.cos(localTime * this.fx * 2) * (currentAmpX * 0.2); // Complexitate mică
+                      
+        let ny = cy + Math.sin(localTime * this.fy + this.py) * currentAmpY +
+                      Math.sin(localTime * this.fy * 2) * (currentAmpY * 0.2);
+
+        // Jitter electric pe înalte
+        if (treble > 0.3) {
+            nx += (Math.random() - 0.5) * treble * 20;
+            ny += (Math.random() - 0.5) * treble * 20;
+        }
+
+        this.x = nx;
+        this.y = ny;
+
+        // Trail logic
+        this.trail.push({x: this.x, y: this.y});
+        if (this.trail.length > 25) this.trail.shift();
+    }
+
+    draw(ctx, bass, vol) {
+        if (this.trail.length < 2) return;
+
+        const hue = (this.hueBase + t * 20) % 360;
+        const color = `hsla(${hue}, 100%, 60%`;
+
+        ctx.beginPath();
+        // Desenăm coada
+        for (let i = 0; i < this.trail.length - 1; i++) {
+            const p1 = this.trail[i];
+            const p2 = this.trail[i+1];
             
-            // Desenăm de la stânga la dreapta
-            const steps = 80;
-            for (let i = 0; i <= steps; i++) {
-                // t merge de la -PI la PI (tot ecranul)
-                const t = (i / steps) * Math.PI * 2 - Math.PI;
-                
-                // MATH: HARMONIC CURVE
-                // Baza este un Sinus
-                let x = cx + t * (wingspan / Math.PI) + offsetX;
-                
-                // Modulație (Vibrația aripilor)
-                // Treble adaugă "țepi" (jaggedness)
-                const jagged = Math.sin(t * 20 + harmTime) * (smooth.treble * 20);
-                
-                let y = cy + offsetY;
-                // Forma de aripă (Gaussian curve approx)
-                y -= Math.cos(t) * height * (1 - layerNorm * 0.5);
-                
-                // Adăugăm vibrația
-                y += Math.sin(t * (3 + layerNorm) + harmTime) * (20 + smooth.mid * 50);
-                y += jagged; // Adăugăm țepii electrici
-
-                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-            }
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            
+            // Fade out la coadă
+            ctx.strokeStyle = `${color}, ${i / this.trail.length})`;
+            ctx.lineWidth = (i / this.trail.length) * (3 + bass * 5);
             ctx.stroke();
         }
-    };
 
-    // === RGB SPLIT EFFECT (GLITCH) ===
-    // Dacă sunetul e tare, desenăm de 3 ori decalat
-    if (smooth.bass > 0.5) {
-        const split = smooth.bass * 15; // Distanța dintre culori
-        
-        // Layer 1: RED (Stânga)
-        drawWingsLayer("rgba(255, 0, 60, 0.7)", -split, 0, 1.02);
-        
-        // Layer 2: CYAN (Dreapta)
-        drawWingsLayer("rgba(0, 243, 255, 0.7)", split, 0, 0.98);
-        
-        // Layer 3: WHITE (Centru - Nucleul fierbinte)
-        ctx.shadowBlur = 20; ctx.shadowColor = "#fff";
-        drawWingsLayer("#ffffff", 0, 0, 1.0);
-        ctx.shadowBlur = 0;
-    } else {
-        // Mod Calm (Doar Cyan/Blue)
-        const hue = 180 + smooth.mid * 50;
-        ctx.shadowBlur = 10; ctx.shadowColor = `hsla(${hue}, 100%, 50%, 1)`;
-        drawWingsLayer(`hsla(${hue}, 100%, 60%, 0.9)`, 0, 0, 1.0);
+        // Capul (Bila de energie)
+        ctx.fillStyle = "#fff";
+        ctx.shadowBlur = 15 + bass * 20;
+        ctx.shadowColor = `${color}, 1)`;
+        ctx.beginPath(); 
+        ctx.arc(this.x, this.y, 3 + bass * 6, 0, Math.PI*2); 
+        ctx.fill();
         ctx.shadowBlur = 0;
     }
-
-    // === REACTOR CORE (Centrul) ===
-    // Un cerc care explodează
-    const coreR = 30 + smooth.bass * 80;
-    ctx.beginPath();
-    ctx.arc(cx, cy, coreR, 0, Math.PI*2);
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
-    // Linii radiale din centru
-    if (smooth.treble > 0.3) {
-        for(let i=0; i<8; i++) {
-            const a = (i/8)*Math.PI*2 + harmTime;
-            const len = coreR + smooth.treble * 50;
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + Math.cos(a)*len, cy + Math.sin(a)*len);
-        }
-    }
-    ctx.stroke();
-
-    ctx.restore(); // Gata cu Shake-ul
 }
 
 /* =======================
-   MODE B: CYMATICS PAINTER (Păstrat Stabil)
+   CLASA: PARTICULĂ COLIZIVĂ
+   - Traiectorii de tip armonograf + coliziuni pereți/între ele
+========================== */
+class CollideParticle {
+    constructor(w, h, id) {
+        this.w = w; this.h = h; this.id = id;
+        this.trail = [];
+        this.reset();
+    }
+
+    reset() {
+        this.x = Math.random() * this.w;
+        this.y = Math.random() * this.h;
+        this.vx = (Math.random() - 0.5) * 1.2;
+        this.vy = (Math.random() - 0.5) * 1.2;
+        this.fx = 0.6 + Math.random() * 1.2;
+        this.fy = 0.6 + Math.random() * 1.2;
+        this.phaseX = Math.random() * Math.PI * 2;
+        this.phaseY = Math.random() * Math.PI * 2;
+        this.r = 4 + Math.random() * 3;
+        this.hue = Math.random() * 360;
+    }
+
+    applyBounds() {
+        if (this.x < this.r) { this.x = this.r; this.vx *= -0.9; }
+        if (this.x > this.w - this.r) { this.x = this.w - this.r; this.vx *= -0.9; }
+        if (this.y < this.r) { this.y = this.r; this.vy *= -0.9; }
+        if (this.y > this.h - this.r) { this.y = this.h - this.r; this.vy *= -0.9; }
+    }
+
+    update(time, bass, mid, treble) {
+        const oscX = Math.sin(time * this.fx + this.phaseX) * (1.6 + mid * 2.4);
+        const oscY = Math.cos(time * this.fy + this.phaseY) * (1.6 + mid * 2.4);
+
+        // energize velocity with bass
+        this.vx += oscX * 0.08 + (Math.random() - 0.5) * treble * 0.4;
+        this.vy += oscY * 0.08 + (Math.random() - 0.5) * treble * 0.4;
+
+        // mild damping
+        this.vx *= 0.985;
+        this.vy *= 0.985;
+
+        this.x += this.vx + bass * 0.6 * Math.sign(this.vx || 1);
+        this.y += this.vy + bass * 0.6 * Math.sign(this.vy || 1);
+
+        this.applyBounds();
+
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > 12) this.trail.shift();
+    }
+}
+
+function initSystem(w, h) {
+    agents = [];
+    particles = [];
+    sparks = [];
+    for(let i=0; i<NUM_AGENTS; i++) agents.push(new HarmonicAgent(w, h, i));
+    for(let i=0; i<NUM_PARTICLES; i++) particles.push(new CollideParticle(w, h, i));
+}
+
+/* =======================
+   MODE A: HARMONIC SWARM (DJ)
+========================== */
+function renderHarmonicSwarm(ctx, w, h) {
+    if (agents.length === 0) initSystem(w, h);
+
+    const cx = w/2; const cy = h/2;
+
+    // 1. PHYSICS TIME
+    // Timpul avansează constant, dar e împins de volum
+    t += 0.015 + smooth.mid * 0.03;
+
+    // 2. BACKGROUND
+    ctx.globalCompositeOperation = "source-over";
+    // Flash pe Kick puternic
+    if (smooth.bass > 0.9 && Math.random() > 0.85) {
+        ctx.fillStyle = "rgba(20, 0, 10, 0.2)"; // Roșu închis flash
+    } else {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.22)"; // Fade normal
+    }
+    ctx.fillRect(0, 0, w, h);
+
+    // 2.1 CERC DE IMPACT (valuri violente pe bass)
+    if (smooth.bass > 0.55 && Math.random() < 0.35 + smooth.bass * 0.4) {
+        pulses.push({
+            r: 10,
+            dr: 8 + smooth.bass * 32,
+            alpha: 0.6 + smooth.bass * 0.3,
+            width: 6 + smooth.bass * 10,
+            hue: 180 + smooth.mid * 120 + Math.random() * 40
+        });
+    }
+    const nextPulses = [];
+    ctx.globalCompositeOperation = "screen";
+    pulses.forEach(p => {
+        p.r += p.dr;
+        p.alpha *= 0.94;
+        p.width *= 0.97;
+        if (p.alpha > 0.02) {
+            nextPulses.push(p);
+            ctx.lineWidth = p.width;
+            ctx.strokeStyle = `hsla(${p.hue}, 90%, 60%, ${p.alpha})`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, p.r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    });
+    pulses = nextPulses;
+
+    // 3. DRAW AGENTS
+    ctx.globalCompositeOperation = "lighter";
+
+    // Desenăm un nucleu subtil în spate
+    const coreR = 20 + smooth.bass * 60;
+    ctx.beginPath(); 
+    ctx.arc(cx, cy, coreR, 0, Math.PI*2);
+    ctx.fillStyle = `rgba(0, 243, 255, ${0.1 + smooth.bass*0.2})`;
+    ctx.fill();
+
+    // Actualizăm și desenăm fiecare agent armonic
+    agents.forEach(agent => {
+        agent.update(t, smooth.bass, smooth.mid, smooth.treble);
+        agent.draw(ctx, smooth.bass, smooth.vol);
+    });
+
+    /* PARTICULE COLIZIVE (swarm brutal) */
+    const collisions = [];
+    particles.forEach(p => p.update(t, smooth.bass, smooth.mid, smooth.treble));
+
+    // Coliziuni între particule (repulsie simplă)
+    for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i], b = particles[j];
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const dist2 = dx*dx + dy*dy;
+            const minD = a.r + b.r;
+            if (dist2 < minD * minD) {
+                const dist = Math.sqrt(dist2) || 0.001;
+                const nx = dx / dist;
+                const ny = dy / dist;
+                const overlap = (minD - dist) * 0.5;
+                a.x -= nx * overlap; b.x += nx * overlap;
+                a.y -= ny * overlap; b.y += ny * overlap;
+                // simple elastic swap on normal
+                const va = a.vx * nx + a.vy * ny;
+                const vb = b.vx * nx + b.vy * ny;
+                const dv = vb - va;
+                a.vx += nx * dv; a.vy += ny * dv;
+                b.vx -= nx * dv; b.vy -= ny * dv;
+                collisions.push({ x:(a.x+b.x)/2, y:(a.y+b.y)/2, hue:(a.hue+b.hue)*0.5 });
+            }
+        }
+    }
+
+    // Desenăm trails + particule
+    ctx.globalCompositeOperation = "lighter";
+    particles.forEach(p => {
+        if (p.trail.length > 1) {
+            for (let i = 0; i < p.trail.length - 1; i++) {
+                const a = p.trail[i];
+                const b = p.trail[i+1];
+                const alpha = (i / p.trail.length) * 0.6 + 0.1;
+                ctx.strokeStyle = `hsla(${p.hue + i*4}, 90%, 60%, ${alpha})`;
+                ctx.lineWidth = 0.6 + (i / p.trail.length) * 2.2;
+                ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+            }
+        }
+        ctx.fillStyle = `hsla(${p.hue}, 100%, 70%, 0.9)`;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    });
+
+    // Scântei pe coliziuni
+    collisions.forEach(c => {
+        for (let k = 0; k < 4; k++) {
+            const ang = Math.random() * Math.PI * 2;
+            const spd = 2 + Math.random() * 3 + smooth.treble * 4;
+            sparks.push({
+                x: c.x, y: c.y,
+                vx: Math.cos(ang) * spd,
+                vy: Math.sin(ang) * spd,
+                life: 12 + Math.random() * 10,
+                hue: c.hue + Math.random() * 40
+            });
+        }
+    });
+
+    const nextSparks = [];
+    ctx.globalCompositeOperation = "screen";
+    sparks.forEach(s => {
+        s.x += s.vx; s.y += s.vy;
+        s.vx *= 0.96; s.vy *= 0.96;
+        s.life -= 1;
+        if (s.life > 0) {
+            nextSparks.push(s);
+            const a = Math.min(1, s.life / 12);
+            ctx.strokeStyle = `hsla(${s.hue}, 100%, 70%, ${a})`;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(s.x - s.vx * 0.8, s.y - s.vy * 0.8);
+            ctx.stroke();
+        }
+    });
+    sparks = nextSparks;
+
+    // 4. CONEXIUNI (Web) - Doar la intensitate mare
+    if (smooth.mid > 0.4) {
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${smooth.mid * 0.15})`;
+        ctx.beginPath();
+        // Conectăm aleatoriu puncte apropiate
+        for (let i = 0; i < agents.length; i++) {
+            const a = agents[i];
+            const b = agents[(i + 1) % agents.length]; // Următorul din listă
+            
+            const dx = a.x - b.x;
+            const dy = a.y - b.y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            
+            if (dist < 300) {
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+            }
+        }
+        ctx.stroke();
+    }
+}
+
+/* =======================
+   MODE B: CYMATICS (ART) - CALM & CURAT
 ========================== */
 function renderCymatics(ctx, w, h, startTime, totalDuration) {
     const cx = w/2; const cy = h/2;
+    // 1. RESET COMPLET (Ecran Negru la început)
     if (resetFlag) {
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, w, h);
-        resetFlag = false; prevX = cx; prevY = cy; initialized = false; return;
+        resetFlag = false; prevX = cx; prevY = cy; initialized = false; 
+        return;
     }
+    // 2. STOP dacă nu e activ
     if (!paintingState.active || paintingState.paused) return;
 
+    // Logică desenare
     const currentRun = (Date.now() - paintingState.startTime) / 1000;
     const total = paintingState.elapsedBeforePause + currentRun;
     const progress = Math.min(1, total / paintingState.duration);
@@ -172,19 +387,18 @@ function renderCymatics(ctx, w, h, startTime, totalDuration) {
     const rotations = 20; 
     const angle = progress * (Math.PI * 2 * rotations);
     const maxR = Math.min(w, h) * 0.40; 
-    const baseR = progress * maxR;
+    const currentBaseRadius = progress * maxR;
 
     let sym = 3;
     if (audioData.pitch > 50) sym = 3 + Math.floor(audioData.pitch / 150);
     smooth.pitch = lerp(smooth.pitch, sym, 0.1);
     
-    // Scale factor pentru final
-    const scale = 1.0 + (progress * 2.5); 
-    const vib = smooth.vol * 60 * scale;
-    const grit = (Math.random()-0.5) * smooth.treble * 20 * scale;
+    const scaleFactor = 1.0 + (progress * 2.5); 
+    const vibration = smooth.vol * 60 * scaleFactor;
+    const grit = (Math.random()-0.5) * smooth.treble * 20 * scaleFactor;
 
-    const shape = Math.cos(smooth.pitch * angle) * vib;
-    const r = baseR + shape + grit;
+    const shape = Math.cos(smooth.pitch * angle) * vibration;
+    const r = currentBaseRadius + shape + grit;
 
     const x = cx + Math.cos(angle) * r;
     const y = cy + Math.sin(angle) * r;
@@ -193,7 +407,7 @@ function renderCymatics(ctx, w, h, startTime, totalDuration) {
     if (!initialized) { prevX = x; prevY = y; initialized = true; }
 
     const hue = 180 + (progress * 140); 
-    ctx.lineWidth = (1 + smooth.vol * 3) * (0.8 + progress);
+    ctx.lineWidth = (1 + smooth.vol * 3) * (0.8 + progress * 0.5);
     ctx.strokeStyle = `hsla(${hue}, 100%, 60%, 0.8)`;
     ctx.lineCap = "round";
 
@@ -206,15 +420,14 @@ export function renderFrame(ctx) {
     const h = ctx.canvas.height;
     if (!audioData) return;
 
-    // Smoothing agresiv pentru "Punch"
-    smooth.vol = lerp(smooth.vol, audioData.volume, 0.2); // 0.2 e mai rapid ca 0.1
-    smooth.bass = lerp(smooth.bass, audioData.bass, 0.25); // Bas foarte rapid
+    smooth.vol = lerp(smooth.vol, audioData.volume, 0.15);
+    smooth.bass = lerp(smooth.bass, audioData.bass, 0.2);
     smooth.mid = lerp(smooth.mid, audioData.mid, 0.15);
     smooth.treble = lerp(smooth.treble, audioData.treble, 0.15);
 
     if (currentMode === 'DJ') {
-        renderCyberWings(ctx, w, h);
-        applyCRTEffects(ctx, 0.4); 
+        renderHarmonicSwarm(ctx, w, h);
+        applyCRTEffects(ctx, 0.4);
     } else {
         renderCymatics(ctx, w, h, paintingState.startTime, paintingState.duration);
     }
