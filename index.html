@@ -23,21 +23,30 @@
         </div>
     </div>
 
-    <div id="terminal-layer">
-        <div class="term-header">/// KERNEL_LOG</div>
-        <div id="live-log">Initializing...</div>
-    </div>
-
     <div id="boot-layer">
-        <div class="blast-door door-top"><div class="hazard-stripes"></div></div>
-        <div class="blast-door door-bottom"><div class="hazard-stripes"></div></div>
-        <div class="boot-center-mech">
-            <div class="caution-plate">WARNING: HIGH VOLTAGE AUDIO</div>
-            <div class="boot-terminal"><div id="console-log" class="crt-text">SYSTEM BOOT..._</div></div>
-            <div class="lever-container hidden" id="engage-container">
-                <div class="lever-base"></div>
-                <button id="engage-btn" class="lever-handle"><span>ENGAGE</span></button>
-            </div>
+        <div class="boot-bg"></div>
+        <div class="boot-stars"></div>
+        <div class="boot-flyer flyer-a"></div>
+        <div class="boot-flyer flyer-b"></div>
+        <div class="boot-flyer flyer-c"></div>
+        <div class="boot-flyer flyer-d"></div>
+        <div class="boot-flyer flyer-e"></div>
+        <div class="boot-flyer flyer-f"></div>
+        <div class="boot-flyer flyer-g"></div>
+        <div class="boot-flyer flyer-h"></div>
+        <div class="boot-flyer flyer-i"></div>
+        <div class="boot-flyer flyer-j"></div>
+        <div class="boot-flyer flyer-k"></div>
+        <div class="boot-flyer flyer-l"></div>
+        <div class="boot-walker"></div>
+        <div class="boot-frame">
+            <div class="boot-title">PitchPlease</div>
+            <div class="boot-sub">INSERT FLOPPY & PRAY · 1990</div>
+            <button id="start-btn" class="boot-play">
+                <span class="play-icon">▶</span>
+            </button>
+            <div class="boot-wires"></div>
+            <div class="boot-log">[READY] PRESS START</div>
         </div>
     </div>
 
@@ -60,7 +69,12 @@
                     </div>
                 </div>
                 <div class="analog-gauge-container">
-                    <div class="gauge-housing"><div id="rec-progress" class="gauge-fluid"></div><div class="gauge-glass"></div><div class="gauge-ticks"></div></div>
+                    <div class="gauge-housing">
+                        <div id="rec-progress" class="gauge-fluid"></div>
+                        <div class="gauge-remaining" id="rec-remaining">--</div>
+                        <div class="gauge-glass"></div>
+                        <div class="gauge-ticks"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -98,6 +112,31 @@
                      <button id="btn-mode-art" class="toggle-switch">
                         <span class="toggle-handle"></span><span class="toggle-text">HARMONIC</span>
                     </button>
+                     <button id="btn-mode-lab" class="toggle-switch">
+                        <span class="toggle-handle"></span><span class="toggle-text">LAB</span>
+                    </button>
+                     <button id="btn-mode-eq" class="toggle-switch">
+                        <span class="toggle-handle"></span><span class="toggle-text">EQ</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="corner-group bottom-right">
+            <div class="metal-panel analysis-panel box-shadow-inset">
+                <div class="panel-header-mech">ANALIZĂ AUDIO</div>
+                <div class="analysis-toggle">
+                    <button id="btn-analysis" class="mech-push-btn wide">LAB</button>
+                    <span id="analysis-status" class="analysis-status off">OFF</span>
+                </div>
+                <div class="analysis-grid">
+                    <div class="analysis-row"><span>INTENSITATE</span><span id="analysis-vol">--</span></div>
+                    <div class="analysis-row"><span>BASS</span><span id="analysis-bass">--</span></div>
+                    <div class="analysis-row"><span>MID</span><span id="analysis-mid">--</span></div>
+                    <div class="analysis-row"><span>TREBLE</span><span id="analysis-treble">--</span></div>
+                    <div class="analysis-row"><span>VAR</span><span id="analysis-var">--</span></div>
+                    <div class="analysis-hint">🔬 Lissajous: înclinarea și răsucirea arată raportul bass/treble; cât de deschis e ovalul ≈ energie mid; variabilitatea zguduie forma.</div>
+                    <div class="analysis-hint">Mișcare mai lentă pentru a observa: strâmt pe verticală = bass mare; rotit și pliat = treble/variabilitate; cerc/oval stabil = mix echilibrat.</div>
                 </div>
             </div>
         </div>

@@ -32,6 +32,138 @@ export function resetPainting() { resetFlag = true; initialized = false; paintin
 
 const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
 const smooth = { vol: 0, bass: 0, mid: 0, treble: 0, pitch: 0 };
+const labSmooth = { vol: 0, bass: 0, mid: 0, treble: 0, variability: 0 };
+
+/* =======================
+   MODE EQ: Studio-Style 3-Band Meter
+========================== */
+function renderEQBars(ctx, w, h) {
+    const now = performance.now() * 0.001;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.fillRect(0, 0, w, h);
+
+    // subtle grid for level reference
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.lineWidth = 1;
+    const rows = 8;
+    const top = h * 0.12;
+    const height = h * 0.72;
+    for (let i = 0; i <= rows; i++) {
+        const y = top + (i / rows) * height;
+        ctx.beginPath(); ctx.moveTo(w * 0.18, y); ctx.lineTo(w * 0.82, y); ctx.stroke();
+    }
+
+    const bars = [
+        { label: "BASS", val: smooth.bass, colorTop: "rgba(255,60,90,0.95)", colorLow: "rgba(90,10,20,0.95)" },
+        { label: "MID", val: smooth.mid, colorTop: "rgba(245,245,245,0.95)", colorLow: "rgba(60,60,70,0.95)" },
+        { label: "TREB", val: smooth.treble, colorTop: "rgba(39,231,255,0.95)", colorLow: "rgba(8,20,30,0.95)" }
+    ];
+
+    const barWidth = Math.min(120, w * 0.18);
+    const gap = Math.min(90, w * 0.09);
+    const totalWidth = barWidth * bars.length + gap * (bars.length - 1);
+    const startX = (w - totalWidth) * 0.5;
+    const baseY = h * 0.84;
+    const maxH = h * 0.6;
+
+    ctx.lineWidth = 2;
+    bars.forEach((bar, i) => {
+        const x = startX + i * (barWidth + gap);
+        const wiggle = Math.sin(now * 3 + i * 1.4) * 0.05;
+        const level = Math.max(0.02, Math.min(1, bar.val + wiggle));
+        const hgt = level * maxH;
+        const y = baseY - hgt;
+
+        const grad = ctx.createLinearGradient(x, baseY, x, y);
+        grad.addColorStop(0, bar.colorLow);
+        grad.addColorStop(0.5, bar.colorTop);
+        grad.addColorStop(1, "rgba(255,255,255,0.9)");
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = bar.colorTop;
+        ctx.shadowBlur = 22;
+        ctx.fillRect(x, y, barWidth, hgt);
+        ctx.shadowBlur = 0;
+
+        ctx.strokeStyle = "rgba(255,255,255,0.2)";
+        ctx.strokeRect(x, y, barWidth, hgt);
+
+        // peak cap flicker
+        const capHeight = 8;
+        const capY = y - 10 - Math.sin(now * 6 + i) * 4;
+        ctx.fillStyle = "rgba(255,255,255,0.8)";
+        ctx.fillRect(x, capY, barWidth, capHeight);
+
+        // label
+        ctx.font = `${Math.max(12, Math.floor(barWidth * 0.18))}px var(--font-stencila, 'VT323')`;
+        ctx.fillStyle = "rgba(200,200,200,0.9)";
+        ctx.textAlign = "center";
+        ctx.fillText(bar.label, x + barWidth / 2, baseY + 18);
+    });
+
+    // divider lines
+    ctx.strokeStyle = "rgba(255,255,255,0.08)";
+    bars.forEach((_, i) => {
+        if (i === bars.length - 1) return;
+        const dx = startX + (i + 1) * (barWidth + gap) - gap * 0.5;
+        ctx.beginPath(); ctx.moveTo(dx, top * 0.8); ctx.lineTo(dx, baseY + 24); ctx.stroke();
+    });
+
+    ctx.shadowBlur = 0;
+}
+
+/* =======================
+   MODE LAB: Lissajous Analyzer
+========================== */
+function renderLissajousLab(ctx, w, h) {
+    const cx = w * 0.5;
+    const cy = h * 0.5;
+    const now = performance.now() * 0.001;
+
+    // clear with subtle grid tint
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "rgba(0,0,0,0.12)";
+    ctx.fillRect(0, 0, w, h);
+
+    // axes/grid
+    ctx.strokeStyle = "rgba(39,231,255,0.15)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, h); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
+
+    // Lissajous params from audio (slow smoothed to let you read motion)
+    const a = 1 + labSmooth.mid * 2.0 + labSmooth.variability * 1.0;
+    const b = 2 + labSmooth.treble * 2.0;
+    const delta = Math.PI * labSmooth.bass * 0.8 + now * 0.02; // even slower phase drift
+    const amp = Math.min(w, h) * (0.25 + labSmooth.vol * 0.25);
+    const samples = 420;
+
+    const pts = [];
+    for (let i = 0; i < samples; i++) {
+        const t0 = (i / samples) * Math.PI * 2;
+        const x = cx + amp * Math.sin(a * t0 + delta);
+        const y = cy + amp * Math.sin(b * t0);
+        pts.push({ x, y });
+    }
+
+    // draw path
+    ctx.globalCompositeOperation = "lighter";
+    ctx.lineWidth = 1.8 + labSmooth.vol * 1.8;
+    ctx.strokeStyle = `hsla(${180 + labSmooth.treble * 120}, 90%, 60%, ${0.55 + labSmooth.vol * 0.35})`;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.closePath();
+    ctx.stroke();
+
+    // trailing glow dots for energy insight
+    ctx.fillStyle = `hsla(${320 + labSmooth.bass * 80}, 100%, 65%, 0.5)`;
+    for (let i = 0; i < pts.length; i += 35) {
+        ctx.beginPath();
+        ctx.arc(pts[i].x, pts[i].y, 2 + smooth.bass * 3, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
 
 /* =======================
    CLASA: HARMONIC LASER AGENT
@@ -425,10 +557,22 @@ export function renderFrame(ctx) {
     smooth.mid = lerp(smooth.mid, audioData.mid, 0.15);
     smooth.treble = lerp(smooth.treble, audioData.treble, 0.15);
 
+    // LAB smoothing is slower to let shapes settle for analysis
+    labSmooth.vol = lerp(labSmooth.vol, audioData.volume || 0, 0.06);
+    labSmooth.bass = lerp(labSmooth.bass, audioData.bass || 0, 0.06);
+    labSmooth.mid = lerp(labSmooth.mid, audioData.mid || 0, 0.06);
+    labSmooth.treble = lerp(labSmooth.treble, audioData.treble || 0, 0.06);
+    labSmooth.variability = lerp(labSmooth.variability, audioData.variability || 0, 0.06);
+
     if (currentMode === 'DJ') {
         renderHarmonicSwarm(ctx, w, h);
         applyCRTEffects(ctx, 0.4);
-    } else {
+    } else if (currentMode === 'ART') {
         renderCymatics(ctx, w, h, paintingState.startTime, paintingState.duration);
+    } else if (currentMode === 'LAB') {
+        renderLissajousLab(ctx, w, h);
+    } else if (currentMode === 'EQ') {
+        renderEQBars(ctx, w, h);
+        applyCRTEffects(ctx, 0.35);
     }
 }
