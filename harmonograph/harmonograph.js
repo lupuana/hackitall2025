@@ -56,7 +56,7 @@ export function generateHarmonographPoints(t, canvas) {
     const breathe = 1.0 + (0.05 + E * 0.10 + treble * 0.05) * Math.sin(drift * 1.3 + V * 3.2 + mid * 2.0);
 
     // ⚡ armonograful evoluează mai rapid
-    const steps = 2000;
+    const steps = 1400; // fewer points for performance while keeping smoothness
 
     for (let i = 0; i < steps; i++) {
         const tt = t * 0.0012 + i * 0.0105; // ← versiunea rapidă

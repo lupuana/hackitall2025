@@ -5,6 +5,7 @@ import { renderFrame } from "./render/renderer.js";
 let canvas, ctx;
 let t = 0;
 let started = false;
+let smoothSpeed = 0;
 
 function resize() {
     canvas.width = window.innerWidth;
@@ -38,10 +39,13 @@ function loop() {
     updateAudio();
 
     const vol = audioData.volume || 0;
+    const energy = audioData.energy || 0;
+    const variability = audioData.variability || 0;
 
-    // accelerăm timpul în funcție de audio
-    const speed = 0.5 + vol * 2.0 + audioData.energy * 1.2;
-    t += speed;
+    // viteză lină: joasă pe sunet lent, energică pe volum/frecvențe mari
+    const targetSpeed = 0.3 + vol * 1.4 + energy * 1.8 + variability * 1.2;
+    smoothSpeed = smoothSpeed * 0.85 + targetSpeed * 0.15;
+    t += smoothSpeed;
 
     const points = generateHarmonographPoints(t, canvas);
 
