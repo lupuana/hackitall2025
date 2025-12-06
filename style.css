@@ -6,8 +6,16 @@
     --bg-dark: #020202; /* Deep Black */
 }
 
-body {
+/* Stiluri de bază combinate */
+html, body {
     margin: 0;
+    padding: 0; /* Păstrat din HEAD */
+    height: 100%; /* Păstrat din HEAD */
+    width: 100%; /* Păstrat din HEAD */
+}
+
+body {
+    /* Preluat din a7e96c4, care definește stilul retro */
     overflow: hidden;
     background: var(--bg-dark);
     font-family: 'VT323', monospace;

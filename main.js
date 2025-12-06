@@ -1,47 +1,81 @@
 // main.js - Application Orchestrator
 
-// We import the UI initialization logic (from your ui/controls.js file)
-// and the core state management (from your ui/state.js file)
+// ================================
+// 1. IMPORTS
+// ================================
+
+// Imports esențiale din ambele ramuri:
 import { initializeControls } from './ui/controls.js'; 
-// import { getState } from './ui/state.js'; 
-// import { initializeAudio, getAudioData, stopAudio } from './audio/audioEngine.js'; // To be implemented later
+import { initAudio, updateAudio, audioEngine, audioData, ensureAudioRunning } from "./audio/audioEngine.js";
+import { generateHarmonographPoints } from "./harmonograph/harmonograph.js";
+import { renderFrame } from "./render/renderer.js";
 
 // Global variables
 let canvas, ctx;
+let started = false; // Necessar pentru controlul audio (din HEAD)
 
 // Time variable for Harmonograph animation
 let t = 0;
 
+
 // ================================
-// 1. CANVAS SETUP & LOOP
+// 2. CANVAS SETUP & RESIZE
 // ================================
 
+// Păstrăm funcția de setup din a7e96c4 pentru a inițializa canvas-ul
 function setupCanvas() {
     canvas = document.getElementById("screen");
     ctx = canvas.getContext("2d");
-    resizeCanvas();
+    resizeCanvas(); // Folosim resizeCanvas
     window.addEventListener("resize", resizeCanvas);
 }
 
+// Renunțăm la resize() și păstrăm resizeCanvas() din a7e96c4
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
 
-/**
- * Placeholder function for drawing the Harmonograph.
- * This is where you will call the complex math/drawing logic.
- */
-function drawHarmonograph(time) {
-    // 🔥 The green square has been removed. 
-    // This function is now empty and ready for your Harmonograph logic 
-    // (which will be imported from harmonograph/harmonograph.js)
+
+// ================================
+// 3. AUDIO UNLOCK & STARTUP (Logică preluată din HEAD)
+// ================================
+
+// 🔥 Browserul NU permite audio până la un click/tap/tastă.
+const unlockAudio = async () => {
+    if (started) return;
+    started = true;
+    await start();
+};
+// Ascultători pentru deblocarea audio
+window.addEventListener("pointerdown", unlockAudio, { once: true });
+window.addEventListener("keydown", unlockAudio, { once: true });
+
+async function start() {
+    // Reinițializăm canvas-ul și contextul, deoarece setupCanvas() din a7e96c4 făcea asta
+    canvas = document.getElementById("screen"); 
+    ctx = canvas.getContext("2d");
+    resizeCanvas(); // Folosim resizeCanvas
+    window.addEventListener("resize", resizeCanvas);
+
+    // 1. Initialize Audio
+    await initAudio();
+    await ensureAudioRunning();
     
-    // Example call structure for when you implement the math:
-    // const { volume, pitch } = getAudioData(); // Get current audio values
-    // const points = generateHarmonographPoints(volume, pitch, time); 
-    // renderPoints(points); 
+    // 2. Initialize UI Controls (din a7e96c4)
+    initializeControls(); 
+
+    // 3. Start the animation loop
+    loop();
+    
+    // Mesaj de status (din a7e96c4)
+    console.log("Application initialized. Ready to render.");
 }
+
+
+// ================================
+// 4. MAIN ANIMATION LOOP (Combinată)
+// ================================
 
 /**
  * Main animation loop (runs at ~60 FPS).
@@ -49,35 +83,32 @@ function drawHarmonograph(time) {
 function loop() {
     requestAnimationFrame(loop);
 
-    // 1. Afterglow/CRT fade effect (keeps the screen dark and fades old drawings)
-    ctx.fillStyle = "rgba(0, 0, 0, 0.08)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 1. Audio Analysis (Din HEAD)
+    updateAudio();
 
-    // 2. Audio Analysis (When fully implemented)
-    // if (getState().audioActive) {
-    //     getAudioData(); 
-    // }
+    const vol = audioData.volume || 0;
 
-    // 3. Drawing
-    drawHarmonograph(t);
+    // 2. Update Time (Controls the slow, organic rotation of the figure) (Din HEAD)
+    // accelerăm timpul în funcție de audio
+    const speed = 0.5 + vol * 2.0 + audioData.energy * 1.2;
+    t += speed;
 
-    // 4. Update Time (Controls the slow, organic rotation of the figure)
-    t += 0.005; 
+    // 3. Drawing (Din HEAD)
+    const points = generateHarmonographPoints(t, canvas);
+
+    // 4. Render (Folosim renderFrame din HEAD/Renderer, care include efectul CRT)
+    renderFrame(ctx, points);
 }
 
 
 // ================================
-// 2. INITIALIZATION
+// 5. INITIALIZATION FALLBACK (Modificat)
 // ================================
-document.addEventListener('DOMContentLoaded', () => {
-    setupCanvas();
 
-    // 1. Initialize UI Controls and event handlers (toggle, sliders, etc.)
-    initializeControls(); 
-    
-    // 2. Start the animation loop
-    loop();
-    
-    // You can also add status message updates here:
-    console.log("Application initialized. Ready to render.");
+// Păstrăm listenerul 'DOMContentLoaded' doar pentru logica UI care nu necesită audio, 
+// dar pornim bucla de animație în 'start()' (după click)
+document.addEventListener('DOMContentLoaded', () => {
+    // setupCanvas și initializeControls sunt mutate în start()
+    // pentru a se asigura că funcționează după ce canvas-ul este gata.
+    // Lăsăm această secțiune goală, deoarece 'start' este punctul de intrare real.
 });
