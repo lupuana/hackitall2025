@@ -22,6 +22,7 @@ export class AudioEngine {
         this.audioContext = null;
         this.analyser = null;
         this.microphone = null;
+        this.stream = null;
         this.timeData = null;
         this.freqData = null;
         this.running = false;
@@ -53,6 +54,8 @@ export class AudioEngine {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            this.stream = stream;
 
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = CONFIG.fftSize;
