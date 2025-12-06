@@ -11,6 +11,7 @@
 <body>
 
     <canvas id="screen"></canvas>
+    <button id="hud-toggle" class="hud-toggle">HUD ▼</button>
     
     <div class="rust-overlay"></div>
     <div class="crt-flicker"></div>
@@ -51,96 +52,182 @@
     </div>
 
     <div id="hud-layer" class="hidden">
-        <div class="corner-group top-left">
-            <div class="metal-panel top-console-mini">
-                <div class="screws-corner"></div>
-                <div class="panel-label">UNIT 734</div>
-                <div class="nixie-tube-container"><div id="time-display" class="nixie-text">00:00:00</div></div>
-            </div>
-            <div class="metal-panel left-mod box-shadow-inset">
-                <div class="screws-corner"></div>
-                <div class="panel-header-mech">SEQUENCE</div>
-                <div class="control-grid">
-                    <div class="timer-group"><label>DUR</label><input type="number" id="rec-duration" value="60" class="mechanical-input"></div>
-                    <div class="button-bank">
-                        <div class="btn-bezel"><button id="btn-record" class="mech-push-btn">REC</button><div class="indicator-bulb red"></div></div>
-                        <div class="btn-bezel"><button id="btn-pause" class="mech-push-btn" disabled>HOLD</button><div class="indicator-bulb yellow"></div></div>
-                        <div class="btn-bezel"><button id="btn-reset" class="mech-push-btn">DUMP</button><div class="indicator-bulb green"></div></div>
-                    </div>
+        <div class="console-frame">
+            <div class="console-header">
+                <div class="metal-panel top-console-mini console-chip">
+                    <div class="screws-corner"></div>
+                    <div class="panel-label">UNIT 734</div>
+                    <div class="nixie-tube-container"><div id="time-display" class="nixie-text">00:00:00</div></div>
                 </div>
-                <div class="analog-gauge-container">
-                    <div class="gauge-housing">
-                        <div id="rec-progress" class="gauge-fluid"></div>
-                        <div class="gauge-remaining" id="rec-remaining">--</div>
-                        <div class="gauge-glass"></div>
-                        <div class="gauge-ticks"></div>
+                <div class="console-banner">
+                    <div class="banner-title">PIXEL OPS // VISUAL CORE</div>
+                    <div class="banner-sub">CYBER AUDIO DRIVERS ENGAGED</div>
+                </div>
+                <div class="metal-panel crt-housing-mini">
+                    <div class="screws-corner"></div>
+                    <div class="crt-screen-bezel">
+                        <div class="crt-screen-content">
+                            <div class="crt-line">STATUS: <span id="rec-status" class="blink-amber">OFFLINE</span></div>
+                            <div class="crt-line large">INPUT:</div>
+                            <div id="note-val" class="crt-big-text">--.-</div>
+                            <div class="scanline-overlay"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="corner-group top-right">
-             <div class="metal-panel crt-housing-mini">
-                 <div class="screws-corner"></div>
-                <div class="crt-screen-bezel">
-                    <div class="crt-screen-content">
-                        <div class="crt-line">STATUS: <span id="rec-status" class="blink-amber">OFFLINE</span></div>
-                        <div class="crt-line large">INPUT:</div>
-                        <div id="note-val" class="crt-big-text">--.-</div>
-                        <div class="scanline-overlay"></div>
+            <div class="console-grid">
+                <div class="console-col">
+                    <div class="metal-panel left-mod box-shadow-inset">
+                        <div class="screws-corner"></div>
+                        <div class="panel-header-mech">SEQUENCE</div>
+                        <div class="control-grid">
+                            <div class="timer-group"><label>DUR</label><input type="number" id="rec-duration" value="60" class="mechanical-input"></div>
+                            <div class="button-bank">
+                                <div class="btn-bezel"><button id="btn-record" class="mech-push-btn">REC</button><div class="indicator-bulb red"></div></div>
+                                <div class="btn-bezel"><button id="btn-pause" class="mech-push-btn" disabled>HOLD</button><div class="indicator-bulb yellow"></div></div>
+                                <div class="btn-bezel"><button id="btn-reset" class="mech-push-btn">DUMP</button><div class="indicator-bulb green"></div></div>
+                            </div>
+                        </div>
+                        <div class="analog-gauge-container">
+                            <div class="gauge-housing">
+                                <div id="rec-progress" class="gauge-fluid"></div>
+                                <div class="gauge-remaining" id="rec-remaining">--</div>
+                                <div class="gauge-glass"></div>
+                                <div class="gauge-ticks"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="metal-panel mods-launcher box-shadow-inset">
+                        <div class="panel-header-mech">MODS</div>
+                        <div class="mods-launcher-row">
+                            <button id="btn-mods" class="mech-push-btn wide">OPEN</button>
+                            <div class="indicator-bulb green" id="mods-status"></div>
+                        </div>
+                    </div>
+
+                    <div class="metal-panel themes-panel box-shadow-inset">
+                        <div class="panel-header-mech">THEMES / PERF</div>
+                        <div class="theme-grid">
+                            <button id="theme-default" class="mech-push-btn wide">DEFAULT</button>
+                            <button id="theme-neon" class="mech-push-btn wide">NEON</button>
+                            <button id="theme-amber" class="mech-push-btn wide">AMBER</button>
+                            <button id="theme-ice" class="mech-push-btn wide">ICE</button>
+                        </div>
+                        <div class="perf-row">
+                            <button id="perf-toggle" class="mech-push-btn wide">PERF OFF</button>
+                            <span class="mod-pill">FPS SAFE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-col">
+                    <div class="metal-panel visual-core-panel">
+                        <div class="screws-corner"></div>
+                        <label class="switch-label">VISUAL CORE</label>
+                        <div class="toggle-group">
+                            <button id="btn-mode-dj" class="toggle-switch active">
+                                <span class="toggle-handle"></span><span class="toggle-text">BARCODE</span>
+                            </button>
+                            <button id="btn-mode-art" class="toggle-switch">
+                                <span class="toggle-handle"></span><span class="toggle-text">HARMONIC</span>
+                            </button>
+                            <button id="btn-mode-lab" class="toggle-switch">
+                                <span class="toggle-handle"></span><span class="toggle-text">LAB</span>
+                            </button>
+                            <button id="btn-mode-eq" class="toggle-switch">
+                                <span class="toggle-handle"></span><span class="toggle-text">EQ</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="metal-panel right-mod box-shadow-inset">
+                        <div class="screws-corner"></div>
+                        <div class="panel-header-mech">HYDRAULICS</div>
+                        <div class="fader-group">
+                            <label>GAIN</label>
+                            <div class="fader-track-metal"><input type="range" id="ctrl-sens" min="0.5" max="4.0" step="0.1" value="1.0" class="mech-fader"><div class="fader-slot"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-col">
+                    <div class="metal-panel analysis-panel box-shadow-inset">
+                        <div class="panel-header-mech">ANALIZĂ AUDIO</div>
+                        <div class="analysis-toggle">
+                            <button id="btn-analysis" class="mech-push-btn wide">LAB</button>
+                            <span id="analysis-status" class="analysis-status off">OFF</span>
+                        </div>
+                        <div class="analysis-grid">
+                            <div class="analysis-row"><span>INTENSITATE</span><span id="analysis-vol">--</span></div>
+                            <div class="analysis-row"><span>BASS</span><span id="analysis-bass">--</span></div>
+                            <div class="analysis-row"><span>MID</span><span id="analysis-mid">--</span></div>
+                            <div class="analysis-row"><span>TREBLE</span><span id="analysis-treble">--</span></div>
+                            <div class="analysis-row"><span>VAR</span><span id="analysis-var">--</span></div>
+                            <div class="analysis-hint">🔬 Lissajous: înclinarea și răsucirea arată raportul bass/treble; cât de deschis e ovalul ≈ energie mid; variabilitatea zguduie forma.</div>
+                            <div class="analysis-hint">Mișcare mai lentă pentru a observa: strâmt pe verticală = bass mare; rotit și pliat = treble/variabilitate; cerc/oval stabil = mix echilibrat.</div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="metal-panel right-mod box-shadow-inset">
-                 <div class="screws-corner"></div>
-                <div class="panel-header-mech">HYDRAULICS</div>
-                <div class="fader-group">
-                    <label>GAIN</label>
-                    <div class="fader-track-metal"><input type="range" id="ctrl-sens" min="0.5" max="4.0" step="0.1" value="1.0" class="mech-fader"><div class="fader-slot"></div></div>
+        </div>
+    </div>
+
+    <div id="mods-panel" class="hidden">
+        <div class="mods-backdrop"></div>
+        <div class="mods-window metal-panel box-shadow-inset">
+            <div class="mods-header">
+                <div class="panel-header-mech">MODS LAB</div>
+                <button id="mods-close" class="mech-push-btn">X</button>
+            </div>
+            <div class="mods-grid">
+                <div class="mod-card">
+                    <div class="mod-title">Demo Scene</div>
+                    <div class="mod-desc">Rulează un tur de 7s cu moduri schimbate automat.</div>
+                    <button id="mod-demo" class="mech-push-btn wide">Run Demo</button>
+                    <div class="mod-status" id="mod-demo-status">Idle</div>
+                </div>
+                <div class="mod-card">
+                    <div class="mod-title">Easter Egg</div>
+                    <div class="mod-desc">Konami: ↑↑↓↓←→←→BA pentru paletă alternativă.</div>
+                    <div class="mod-toggle-row">
+                        <span class="mod-pill" id="mod-konami-pill">Awaiting code</span>
+                    </div>
+                </div>
+                <div class="mod-card">
+                    <div class="mod-title">Arp Live</div>
+                    <div class="mod-desc">A S D F G declanșează note scurte prin motorul audio.</div>
+                    <div class="mod-toggle-row">
+                        <button id="mod-arp-toggle" class="mech-push-btn">Off</button>
+                        <span class="mod-pill">Keys</span>
+                    </div>
+                </div>
+                <div class="mod-card">
+                    <div class="mod-title">Beat Pads</div>
+                    <div class="mod-desc">Pornește clapele interne (bass/lead/percuție). Vizualul dansează pe ce cânți.</div>
+                    <div class="mod-toggle-row">
+                        <button id="mod-beat-toggle" class="mech-push-btn">Off</button>
+                        <span class="mod-pill" id="mod-beat-prompt">Bass: QWER · Lead: ASDFG · Perc: 1/2/3</span>
+                    </div>
+                </div>
+                <div class="mod-card">
+                    <div class="mod-title">Recorder + Share</div>
+                    <div class="mod-desc">Înregistrează 15s microfon și descarcă .webm.</div>
+                    <button id="mod-recorder" class="mech-push-btn wide">Record 15s</button>
+                    <div class="mod-status" id="mod-recorder-status">Idle</div>
+                </div>
+                <div class="mod-card">
+                    <div class="mod-title">Challenge</div>
+                    <div class="mod-desc">45s să îndeplinești sarcini simple de control.</div>
+                    <button id="mod-challenge" class="mech-push-btn wide">Start Challenge</button>
+                    <div class="mod-status" id="mod-challenge-status">Ready</div>
+                </div>
+                <div class="mod-card">
+                    <div class="mod-title">CRT Wobble</div>
+                    <div class="mod-desc">Scanline + wobble pe bass (DJ/EQ).</div>
+                    <button id="mod-crt-toggle" class="mech-push-btn">Off</button>
                 </div>
             </div>
         </div>
-
-        <div class="corner-group bottom-left">
-            <div class="metal-panel">
-                <div class="screws-corner"></div>
-                <label class="switch-label">VISUAL CORE</label>
-                <div class="toggle-group">
-                    <button id="btn-mode-dj" class="toggle-switch active">
-                        <span class="toggle-handle"></span><span class="toggle-text">BARCODE</span>
-                    </button>
-                     <button id="btn-mode-art" class="toggle-switch">
-                        <span class="toggle-handle"></span><span class="toggle-text">HARMONIC</span>
-                    </button>
-                     <button id="btn-mode-lab" class="toggle-switch">
-                        <span class="toggle-handle"></span><span class="toggle-text">LAB</span>
-                    </button>
-                     <button id="btn-mode-eq" class="toggle-switch">
-                        <span class="toggle-handle"></span><span class="toggle-text">EQ</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="corner-group bottom-right">
-            <div class="metal-panel analysis-panel box-shadow-inset">
-                <div class="panel-header-mech">ANALIZĂ AUDIO</div>
-                <div class="analysis-toggle">
-                    <button id="btn-analysis" class="mech-push-btn wide">LAB</button>
-                    <span id="analysis-status" class="analysis-status off">OFF</span>
-                </div>
-                <div class="analysis-grid">
-                    <div class="analysis-row"><span>INTENSITATE</span><span id="analysis-vol">--</span></div>
-                    <div class="analysis-row"><span>BASS</span><span id="analysis-bass">--</span></div>
-                    <div class="analysis-row"><span>MID</span><span id="analysis-mid">--</span></div>
-                    <div class="analysis-row"><span>TREBLE</span><span id="analysis-treble">--</span></div>
-                    <div class="analysis-row"><span>VAR</span><span id="analysis-var">--</span></div>
-                    <div class="analysis-hint">🔬 Lissajous: înclinarea și răsucirea arată raportul bass/treble; cât de deschis e ovalul ≈ energie mid; variabilitatea zguduie forma.</div>
-                    <div class="analysis-hint">Mișcare mai lentă pentru a observa: strâmt pe verticală = bass mare; rotit și pliat = treble/variabilitate; cerc/oval stabil = mix echilibrat.</div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
     <script type="module" src="main.js"></script>
