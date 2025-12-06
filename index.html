@@ -3,87 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEURAL_LINK_V4.0</title>
+    <title>NEURAL_LINK_V99</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <canvas id="screen"></canvas>
     
-    <div class="grid-layer"></div>
-    <div class="scanline-bar"></div>
-    <div class="static-noise"></div>
+    <div class="scanlines"></div>
+    <div class="noise"></div>
     <div class="vignette"></div>
+    <div class="border-overlay"></div>
 
     <div id="boot-sequence">
-        <div class="terminal-frame">
-            <div class="glitch-wrapper" data-text="SYSTEM_INIT">SYSTEM_INIT</div>
-            <div id="console-log"></div>
-            <button id="engage-btn" class="cyber-btn hidden">
-                <span class="btn-text">ESTABLISH UPLINK</span>
-                <span class="btn-glitch">ESTABLISH UPLINK</span>
-            </button>
+        <div class="boot-content">
+            <div class="glitch-container">
+                <h1 class="mega-glitch" data-text="SYSTEM_FAILURE">SYSTEM_INIT</h1>
+            </div>
+            <div class="code-rain" id="console-log"></div>
+            <div class="warning-sign hidden" id="warning-box">⚠ MEMORY LEAK DETECTED</div>
+            <button id="engage-btn" class="cyber-btn-lg hidden">ESTABLISH_LINK</button>
         </div>
     </div>
 
     <div id="hud-layer" class="hidden">
         
         <div class="hud-top">
-            <div class="sys-id">UNIT: <span class="neon-blue">XJ-9</span></div>
-            
-            <div class="mode-selector">
-                <button id="btn-mode-dj" class="mode-btn active">TECH_ANALYSIS</button>
-                <button id="btn-mode-art" class="mode-btn">NEURAL_ART</button>
+            <div class="hud-module rec-module">
+                <div class="module-header">/// CHRONO_TRIGGER</div>
+                <div class="rec-row">
+                    <div class="input-box">
+                        <label>SEQUENCE_TIME</label>
+                        <input type="number" id="rec-duration" value="60">
+                    </div>
+                    <button id="btn-record" class="action-btn">REC</button>
+                    <button id="btn-pause" class="action-btn" disabled>||</button>
+                    <button id="btn-reset" class="action-btn warn">RESET</button>
+                </div>
+                <div class="time-readout" id="time-display">00:00 / 00:60</div>
+                <div class="progress-track"><div id="rec-progress"></div></div>
             </div>
 
-            <div class="top-radar">
-                <div class="radar-scan"></div>
+            <div class="hud-module mode-module">
+                <div class="module-header">/// VISUAL_CORE</div>
+                <div class="switch-row">
+                    <button id="btn-mode-dj" class="switch-btn active">DJ_REACTOR</button>
+                    <button id="btn-mode-art" class="switch-btn">ART_SPIRAL</button>
+                </div>
             </div>
         </div>
 
-        <div class="hud-panel left-panel">
-            <div class="panel-box">
-                <h3 class="panel-title">INPUT_SOURCE</h3>
-                <div class="data-block">
-                    <span class="label">PITCH_DETECT</span>
-                    <span class="value glitch-text" id="note-val">--</span>
-                </div>
-                <div class="data-block">
-                    <span class="label">FREQUENCY</span>
-                    <span class="value" id="hz-val">0000 Hz</span>
-                </div>
-                <div class="deco-lines">/// MONITORING ///</div>
+        <div class="hud-side left">
+            <div class="hud-module stats-box">
+                <div class="module-header">/// LIVE_TELEMETRY</div>
+                <div class="stat-row"><span>CORE_TEMP</span> <span class="val-dyn">98°C</span></div>
+                <div class="stat-row"><span>AUDIO_IN</span> <span id="note-val" class="neon-text">--</span></div>
+                <div class="stat-row"><span>STATUS</span> <span id="rec-status">IDLE</span></div>
+                <div class="deco-grid"></div>
             </div>
         </div>
 
-        <div class="hud-panel right-panel">
-            <div class="panel-box control-box">
-                <h3 class="panel-title">CALIBRATION</h3>
-                
-                <div class="fader-group">
-                    <div class="fader-label"><label>SENSITIVITY</label><span id="val-sens" class="fader-val">1.4</span></div>
-                    <input type="range" min="0.5" max="4.0" step="0.1" value="1.4" id="ctrl-sens">
+        <div class="hud-side right">
+            <div class="hud-module controls-box">
+                <div class="module-header">/// MODULATION</div>
+                <div class="slider-wrap">
+                    <label>LINE_WEIGHT</label>
+                    <input type="range" id="ctrl-sens" min="0.5" max="4.0" step="0.1" value="1.0">
                 </div>
-
-                <div class="fader-group">
-                    <div class="fader-label"><label>COMPLEXITY</label><span id="val-complex" class="fader-val">50%</span></div>
-                    <input type="range" min="0" max="100" step="1" value="50" id="ctrl-complex">
+                <div class="slider-wrap">
+                    <label>HARMONICS</label>
+                    <input type="range" id="ctrl-complex" min="0" max="100" value="50">
                 </div>
-            </div>
-            
-            <div class="panel-box" style="margin-top: 10px;">
-                <div class="stat-row">CPU: <span id="cpu-load">12%</span></div>
-                <div class="stat-row">TIME: <span id="sys-timer" class="neon-amber">00:00:00</span></div>
             </div>
         </div>
 
-        <div class="hud-bottom">
-            <div class="vol-readout">
-                MASTER_OUT: <span id="vol-val" class="neon-blue">0%</span>
-            </div>
-        </div>
     </div>
 
     <script type="module" src="main.js"></script>
