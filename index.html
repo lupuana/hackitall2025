@@ -1,12 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Audio Harmonograph</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURAL_LINK_V4.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
     <canvas id="screen"></canvas>
+    
+    <div class="grid-layer"></div>
+    <div class="scanline-bar"></div>
+    <div class="static-noise"></div>
+    <div class="vignette"></div>
+
+    <div id="boot-sequence">
+        <div class="terminal-frame">
+            <div class="glitch-wrapper" data-text="SYSTEM_INIT">SYSTEM_INIT</div>
+            <div id="console-log"></div>
+            <button id="engage-btn" class="cyber-btn hidden">
+                <span class="btn-text">ESTABLISH UPLINK</span>
+                <span class="btn-glitch">ESTABLISH UPLINK</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="hud-layer" class="hidden">
+        
+        <div class="hud-top">
+            <div class="sys-id">UNIT: <span class="neon-blue">XJ-9</span></div>
+            
+            <div class="mode-selector">
+                <button id="btn-mode-dj" class="mode-btn active">TECH_ANALYSIS</button>
+                <button id="btn-mode-art" class="mode-btn">NEURAL_ART</button>
+            </div>
+
+            <div class="top-radar">
+                <div class="radar-scan"></div>
+            </div>
+        </div>
+
+        <div class="hud-panel left-panel">
+            <div class="panel-box">
+                <h3 class="panel-title">INPUT_SOURCE</h3>
+                <div class="data-block">
+                    <span class="label">PITCH_DETECT</span>
+                    <span class="value glitch-text" id="note-val">--</span>
+                </div>
+                <div class="data-block">
+                    <span class="label">FREQUENCY</span>
+                    <span class="value" id="hz-val">0000 Hz</span>
+                </div>
+                <div class="deco-lines">/// MONITORING ///</div>
+            </div>
+        </div>
+
+        <div class="hud-panel right-panel">
+            <div class="panel-box control-box">
+                <h3 class="panel-title">CALIBRATION</h3>
+                
+                <div class="fader-group">
+                    <div class="fader-label"><label>SENSITIVITY</label><span id="val-sens" class="fader-val">1.4</span></div>
+                    <input type="range" min="0.5" max="4.0" step="0.1" value="1.4" id="ctrl-sens">
+                </div>
+
+                <div class="fader-group">
+                    <div class="fader-label"><label>COMPLEXITY</label><span id="val-complex" class="fader-val">50%</span></div>
+                    <input type="range" min="0" max="100" step="1" value="50" id="ctrl-complex">
+                </div>
+            </div>
+            
+            <div class="panel-box" style="margin-top: 10px;">
+                <div class="stat-row">CPU: <span id="cpu-load">12%</span></div>
+                <div class="stat-row">TIME: <span id="sys-timer" class="neon-amber">00:00:00</span></div>
+            </div>
+        </div>
+
+        <div class="hud-bottom">
+            <div class="vol-readout">
+                MASTER_OUT: <span id="vol-val" class="neon-blue">0%</span>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="main.js"></script>
 </body>
 </html>
