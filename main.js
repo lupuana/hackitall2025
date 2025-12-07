@@ -4,19 +4,17 @@ import { renderFrame, setRenderMode, setPaintingParams, resetPainting } from "./
 console.log("✅ Main.js v44 (AUTO-HOLD SAVE) Loaded");
 
 const ui = {
-    // Boot & FX
+    
     bootLayer: document.getElementById('boot-layer'),
     bootBtn: document.getElementById('start-btn'),
     leverContainer: document.getElementById('engage-container'),
     console: document.getElementById('console-log'),
     criticalOverlay: document.getElementById('critical-overlay'),
     terminalLog: document.getElementById('live-log'),
-    
-    // Main HUD
+
     hud: document.getElementById('hud-layer'),
     timeDisplay: document.getElementById('time-display'),
-    
-    // Controls
+
     btnRecord: document.getElementById('btn-record'),
     bulbRec: document.querySelector('.indicator-bulb.red'),
     btnPause: document.getElementById('btn-pause'),
@@ -32,7 +30,6 @@ const ui = {
     
     sensSlider: document.getElementById('ctrl-sens'),
 
-    // Analysis panel
     btnAnalysis: document.getElementById('btn-analysis'),
     analysisStatus: document.getElementById('analysis-status'),
     analysisVol: document.getElementById('analysis-vol'),
@@ -40,14 +37,12 @@ const ui = {
     analysisMid: document.getElementById('analysis-mid'),
     analysisTreble: document.getElementById('analysis-treble'),
     analysisVar: document.getElementById('analysis-var'),
-    
-    // Mode Switching
+
     modeDJ: document.getElementById('btn-mode-dj'),
     modeArt: document.getElementById('btn-mode-art'),
     modeLab: document.getElementById('btn-mode-lab'),
     modeEQ: document.getElementById('btn-mode-eq'),
 
-    // Mods
     modsBtn: document.getElementById('btn-mods'),
     modsStatus: document.getElementById('mods-status'),
     modsPanel: document.getElementById('mods-panel'),
@@ -65,14 +60,12 @@ const ui = {
     modChallengeStatus: document.getElementById('mod-challenge-status'),
     modCrtToggle: document.getElementById('mod-crt-toggle'),
 
-    // Themes / performance
     themeDefault: document.getElementById('theme-default'),
     themeNeon: document.getElementById('theme-neon'),
     themeAmber: document.getElementById('theme-amber'),
     themeIce: document.getElementById('theme-ice'),
     perfToggle: document.getElementById('perf-toggle'),
 
-    // HUD toggle
     hudToggle: document.getElementById('hud-toggle')
 };
 
@@ -85,14 +78,13 @@ let canvas, ctx;
 let isRecording = false, isPaused = false;
 let startTime = 0, pausedElapsed = 0, totalDuration = 60;
 let activeMode = 'DJ'; 
-let isBufferFull = false; // Flag pentru salvare
+let isBufferFull = false; 
 let overloadOn = false;
 let analysisOn = false;
 let hudHidden = false;
 let perfMode = false;
 const analysisSmooth = { vol: 0, bass: 0, mid: 0, treble: 0, variability: 0 };
 
-// === MODS PANEL HELPERS ===
 function setModsOpen(open) {
     modsOpen = open;
     ui.modsPanel.classList.toggle('hidden', !open);
@@ -241,7 +233,7 @@ function startChallenge() {
         }
     }, 1000);
 }
-// Mods state
+
 let modsOpen = false;
 let demoTimer = null;
 let demoRestoreMode = 'DJ';
@@ -254,7 +246,6 @@ let challenge = { active: false, timer: null, countdown: 0, tasks: [] };
 let beatPadsEnabled = false;
 let beatMaster = null;
 
-// Theme presets
 const themePresets = {
     default: {
         '--metal-dark': '#0a0a10', '--metal-light': '#141420', '--indicator-red': '#ff0040',
@@ -278,7 +269,6 @@ const themePresets = {
     }
 };
 
-// Beat pad maps (bass/lead/percussion)
 const beatPads = {
     bass: { keys: { q: 55.0, w: 65.41, e: 73.42, r: 82.41 }, type: 'sawtooth', gain: 0.18 },
     lead: { keys: { a: 220.0, s: 247.0, d: 261.63, f: 293.66, g: 329.63 }, type: 'square', gain: 0.14 },
@@ -348,7 +338,6 @@ function playPerc(type) {
         return;
     }
 
-    // Noise-based snare / hat
     const buffer = ctxAudio.createBuffer(1, ctxAudio.sampleRate * 0.35, ctxAudio.sampleRate);
     const data = buffer.getChannelData(0);
     for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
@@ -383,7 +372,6 @@ function handleBeatPadKey(key) {
     return false;
 }
 
-// === BOOT SEQUENCE ===
 async function runBootSequence() {
     const logs = ["HYDRAULICS... CHECK", "PRESSURE... STABLE", "READY FOR ENGAGE"];
     for (let line of logs) {
@@ -394,7 +382,6 @@ async function runBootSequence() {
 }
 runBootSequence();
 
-// Mods UI wiring
 if (ui.modsBtn) ui.modsBtn.addEventListener('click', () => setModsOpen(true));
 if (ui.modsClose) ui.modsClose.addEventListener('click', () => setModsOpen(false));
 if (ui.modsBackdrop) ui.modsBackdrop.addEventListener('click', () => setModsOpen(false));
@@ -465,20 +452,17 @@ ui.bootBtn.addEventListener('click', async (ev) => {
 
 function resize() { if(canvas){canvas.width = window.innerWidth; canvas.height = window.innerHeight;} }
 
-// === LOGIC ===
 ui.btnRecord.addEventListener('click', () => {
     if (isRecording) return;
     totalDuration = parseInt(ui.durationInput.value) || 60;
-    
-    // Reset States
+
     isRecording = true; isPaused = false; isBufferFull = false;
     startTime = Date.now(); pausedElapsed = 0;
     
     ui.bulbRec.classList.add('on'); ui.bulbReset.classList.remove('on'); ui.bulbPause.classList.remove('on');
     ui.btnPause.disabled = false;
     ui.statusText.innerText = "REC"; ui.statusText.className = "blink-amber"; ui.statusText.style.color = "var(--indicator-red)";
-    
-    // Auto switch to Art
+
     ui.modeArt.click(); 
     
     resetPainting(); setPaintingParams(true, false, totalDuration);
@@ -488,7 +472,7 @@ ui.btnRecord.addEventListener('click', () => {
 ui.btnPause.addEventListener('click', () => {
     if (!isRecording) return;
     if (!isPaused) {
-        // PAUSE MANUAL
+        
         isPaused = true; 
         ui.bulbPause.classList.add('on'); ui.bulbRec.classList.remove('on');
         ui.statusText.innerText = "HOLD"; ui.statusText.style.color = "var(--indicator-amber)";
@@ -496,7 +480,7 @@ ui.btnPause.addEventListener('click', () => {
         pausedElapsed += Date.now() - startTime; 
         setPaintingParams(true, true, totalDuration);
     } else {
-        // RESUME
+        
         isPaused = false; 
         ui.bulbPause.classList.remove('on'); ui.bulbRec.classList.add('on');
         ui.statusText.innerText = "REC"; ui.statusText.style.color = "var(--indicator-red)";
@@ -530,7 +514,6 @@ ui.btnAnalysis.addEventListener('click', () => {
     ui.analysisStatus.classList.toggle('off', !analysisOn);
 });
 
-// === MODE SWITCHING ===
 ui.modeDJ.addEventListener('click', () => { 
     setRenderMode('DJ'); activeMode = 'DJ';
     document.querySelectorAll('.toggle-switch').forEach(b => b.classList.remove('active')); 
@@ -556,7 +539,6 @@ ui.modeEQ.addEventListener('click', () => {
     ui.modeEQ.classList.add('active');
 });
 
-// === SAVE LOGIC (KEY 'S') ===
 window.addEventListener('keydown', (e) => {
     if (e.target && ['INPUT','TEXTAREA'].includes(e.target.tagName)) return;
     handleKonami(e.key);
@@ -565,14 +547,12 @@ window.addEventListener('keydown', (e) => {
     const arpMap = { 'a': 261.63, 's': 293.66, 'd': 329.63, 'f': 349.23, 'g': 392.00 };
     if (arpEnabled && arpMap[key]) playArp(arpMap[key]);
 
-    // Salvăm doar dacă bufferul e plin (s-a terminat înregistrarea)
     if (key === 's' && canvas && isBufferFull) {
         const link = document.createElement('a');
         link.download = `CYBER_ART_${Date.now()}.png`; 
         link.href = canvas.toDataURL(); 
         link.click();
-        
-        // Feedback vizual rapid
+
         const originalText = ui.statusText.innerText;
         ui.statusText.innerText = "IMAGE SAVED";
         ui.statusText.style.color = "var(--neon-cyan)";
@@ -585,7 +565,6 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
-// === TERMINAL LOG ===
 function updateTerminal(note, db) {
     if (!ui.terminalLog) return;
     if (Math.random() > 0.9) {
@@ -604,13 +583,11 @@ function loop() {
     const now = new Date();
     ui.timeDisplay.innerText = now.toTimeString().split(' ')[0];
     if(audioData) ui.pitchText.innerText = audioData.note === '--' ? '--.-' : audioData.note;
-    
-    // Overload Logic
+
     if (audioData) {
         const volPercent = audioData.volume * 100;
         updateTerminal(audioData.note, volPercent);
 
-        // slow, stable readout for analysis
         if (analysisOn) {
             analysisSmooth.vol = analysisSmooth.vol * 0.9 + (audioData.volume || 0) * 0.1;
             analysisSmooth.bass = analysisSmooth.bass * 0.9 + (audioData.bass || 0) * 0.1;
@@ -626,8 +603,8 @@ function loop() {
         }
 
         if (activeMode === 'DJ') {
-            const onThresh = 0.78; // apare mai ușor
-            const offThresh = 0.72; // hysteresis să nu pâlpâie
+            const onThresh = 0.78; 
+            const offThresh = 0.72; 
                 if (!overloadOn && audioData.volume > onThresh) overloadOn = true;
                 if (overloadOn && audioData.volume < offThresh) overloadOn = false;
 
@@ -645,7 +622,6 @@ function loop() {
         }
     }
 
-    // CRT wobble mod
     if (canvas) {
         if (crtWobble && audioData) {
             const wob = Math.min(1, (audioData.bass || 0) * 1.2);
@@ -669,29 +645,26 @@ function loop() {
         ui.progressRemaining.textContent = `${remaining}s`;
         const low = remaining <= 5 && isRecording && !isPaused;
         ui.progressRemaining.classList.toggle('low-time', low);
-        
-        // Când se termină timpul
+
         if (total >= totalDuration) {
-            // Nu oprim de tot, punem pe HOLD
+            
             if (!isPaused) {
                 isPaused = true;
-                pausedElapsed = totalDuration * 1000; // Fixăm timpul la maxim
+                pausedElapsed = totalDuration * 1000; 
             }
-            isBufferFull = true; // Activăm salvarea
-            
-            // Actualizăm UI pentru starea HOLD - READY TO SAVE
-            ui.btnRecord.classList.remove('recording'); // Nu mai clipocește roșu
+            isBufferFull = true; 
+
+            ui.btnRecord.classList.remove('recording'); 
             ui.bulbRec.classList.remove('on');
-            ui.bulbPause.classList.add('on'); // Bec galben aprins
+            ui.bulbPause.classList.add('on'); 
             
-            ui.statusText.innerText = "HOLD: PRESS 'S'"; // Mesajul cerut
+            ui.statusText.innerText = "HOLD: PRESS 'S'"; 
             ui.statusText.style.color = "var(--indicator-amber)";
             ui.statusText.className = "blink-amber";
 
             ui.progressRemaining.textContent = '0s';
             ui.progressRemaining.classList.add('low-time');
-            
-            // Înghețăm renderer-ul la ultimul cadru
+
             setPaintingParams(true, true, totalDuration);
         }
     }

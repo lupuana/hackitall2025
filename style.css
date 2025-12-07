@@ -1,9 +1,7 @@
-/* =========================================
-   V49: RETRO PIXEL CYBERPUNK STYLE
-========================================= */
+
 
 :root {
-    /* Culori păstrate, dar folosite mai "plat" */
+    
     --metal-dark: #0a0a10;
     --metal-light: #141420;
     --rust: #8b4513;
@@ -16,20 +14,19 @@
     --neon-violet: #8000ff;
     --font-crt: 'VT323', monospace;
     --font-stencila: 'Wallpoet', cursive;
-    /* Cursori pixelați (arrow + hand) */
+    
     --cursor-arrow: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='28' shape-rendering='crispEdges'><polygon points='1,1 1,20 6,15 10,27 14,25 9,14 18,14' fill='%23b8fff4' stroke='%23000' stroke-width='2'/><line x1='2' y1='2' x2='6' y2='6' stroke='%23ff2bd9' stroke-width='2'/><rect x='2' y='21' width='5' height='2' fill='%2300f0ff'/></svg>") 0 0, auto;
     --cursor-hand: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='28' shape-rendering='crispEdges'><path d='M7 3 L7 12 L5 12 L5 6 L2 6 L2 12 L1 12 L1 8 L-1 8 L-1 16 L2 24 L10 24 L13 19 L16 16 L16 11 L13 11 L13 14 L12 14 L12 4 L9 4 L9 14 L7 14 Z' fill='%23b8fff4' stroke='%23000' stroke-width='2'/><rect x='3' y='18' width='5' height='2' fill='%23ff2bd9'/></svg>") 0 0, pointer;
 }
 
-/* --- 1. THE PIXELATION CORE --- */
 * {
     box-sizing: border-box;
     user-select: none;
-    /* CRUCIAL: Forțează randarea pixelată peste tot */
-    image-rendering: -moz-crisp-edges; /* Firefox */
-    image-rendering: -webkit-optimize-contrast; /* Webkit (Safari/Chrome vechi) */
-    image-rendering: pixelated; /* Standard modern */
-    image-rendering: crisp-edges; /* Standard alternativ */
+    
+    image-rendering: -moz-crisp-edges; 
+    image-rendering: -webkit-optimize-contrast; 
+    image-rendering: pixelated; 
+    image-rendering: crisp-edges; 
 }
 
 body {
@@ -40,16 +37,15 @@ body {
     overflow: hidden;
     width: 100vw; height: 100vh;
     background: #05060a;
-    /* Background: checkerboard dither + crosshair grid */
+    
     background-image:
         linear-gradient(0deg, transparent 2px, rgba(39,231,255,0.12) 3px),
         linear-gradient(90deg, transparent 2px, rgba(255,63,180,0.12) 3px),
         repeating-linear-gradient(0deg, rgba(15,15,25,0.9) 0, rgba(15,15,25,0.9) 2px, rgba(5,5,10,0.9) 2px, rgba(5,5,10,0.9) 4px),
         repeating-linear-gradient(90deg, rgba(15,15,25,0.9) 0, rgba(15,15,25,0.9) 2px, rgba(5,5,10,0.9) 2px, rgba(5,5,10,0.9) 4px);
-    background-size: 4px 4px, 4px 4px, 4px 4px, 4px 4px; /* Grilă + checkerboard dither */
+    background-size: 4px 4px, 4px 4px, 4px 4px, 4px 4px; 
 }
 
-/* Layout scaffolding so HUD is usable and aligned */
 #hud-layer {
     position: absolute; inset: 0; pointer-events: none;
 }
@@ -62,17 +58,16 @@ body {
 .bottom-left { bottom: 16px; left: 16px; }
 .bottom-right { bottom: 16px; right: 16px; align-items: flex-end; }
 
-/* Overlay suplimentar pentru a simula un ecran cu rezoluție mică */
 body::after {
     content: "";
     position: fixed;
     inset: 0;
     pointer-events: none;
-    /* Grilă fină de pixeli */
+    
     background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px),
                       repeating-linear-gradient(90deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px);
     background-size: 3px 3px;
-        z-index: 2; /* sub HUD pentru clicuri */
+        z-index: 2; 
         opacity: 0.4;
 }
 
@@ -80,11 +75,10 @@ canvas {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
     opacity: 0.92;
     mix-blend-mode: screen;
-    /* Canvas-ul trebuie să fie neapărat pixelat */
+    
     image-rendering: pixelated;
 }
 
-/* HUD scaffold to keep panels placed and clickable */
 #hud-layer { position: absolute; inset: 0; z-index: 10; pointer-events: none; }
 .corner-group { position: absolute; display: flex; flex-direction: column; gap: 22px; pointer-events: auto; }
 .top-left { top: 64px; left: 28px; }
@@ -92,13 +86,12 @@ canvas {
 .bottom-left { bottom: 30px; left: 28px; }
 .bottom-right { bottom: 30px; right: 28px; align-items: flex-end; }
 
-/* --- CONSOLE LAYOUT - PIXEL GRID --- */
 #hud-layer {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 22px;
-    pointer-events: none; /* pass-through except console frame */
+    pointer-events: none; 
 }
 
 .hud-toggle {
@@ -217,31 +210,27 @@ canvas {
 
 .console-chip { min-height: 100%; }
 
-/* --- UI PANELS - RETRO BEVELS --- */
-/* Înlocuim umbrele fine cu borduri dure și umbre "interioare" tăioase */
 .metal-panel {
     background: rgba(20,20,32,0.78);
-    /* Bordură solidă groasă */
+    
     border: 3px solid var(--metal-dark);
-    border-top-color: rgba(39,231,255,0.8); /* Lumină sus */
+    border-top-color: rgba(39,231,255,0.8); 
     border-left-color: rgba(39,231,255,0.6);
-    border-right-color: rgba(255,63,180,0.6); /* Umbră jos/dreapta */
+    border-right-color: rgba(255,63,180,0.6); 
     border-bottom-color: rgba(255,63,180,0.8);
 
-    /* Umbră dură exterioară (drop shadow pixelat) */
     box-shadow: 6px 6px 0px rgba(0,0,0,0.7);
 
     position: relative;
     padding: 12px 14px;
-    border-radius: 0px; /* Fără colțuri rotunjite! */
+    border-radius: 0px; 
     overflow: visible;
     min-width: 240px;
 }
 
-/* Eliminăm efectele smooth de pe panouri */
 .metal-panel::after, .metal-panel::before { display: none; }
 .screws-corner::before, .screws-corner::after {
-    content: '[+]'; /* Mai tehnic */
+    content: '[+]'; 
     font-family: var(--font-crt);
     font-size: 16px; color: #555; top: 2px;
 }
@@ -249,34 +238,30 @@ canvas {
 .top-console-mini { margin-top: 8px; }
 
 .box-shadow-inset {
-    /* Inset dur, fără blur */
+    
     box-shadow: inset 4px 4px 0px rgba(0,0,0,0.8), inset -4px -4px 0px rgba(255,255,255,0.1);
     background: #080810;
     border: 2px solid rgba(10,10,16,0.9);
 }
 
-/* --- BUTTONS & CONTROLS - CHUNKY STYLE --- */
-
-/* Butoane rectangulare dure */
 .mech-push-btn {
     width: 60px; height: 36px;
     background: var(--metal-dark);
-    /* Bevel "în relief" clasic anii 90 */
+    
     border-top: 3px solid rgba(255,255,255,0.3);
     border-left: 3px solid rgba(255,255,255,0.3);
     border-right: 3px solid rgba(0,0,0,0.8);
     border-bottom: 3px solid rgba(0,0,0,0.8);
     color: #f5f5f5;
-    font-family: var(--font-crt); /* Font pixelat */
+    font-family: var(--font-crt); 
     font-size: 1rem; letter-spacing: 1px;
     cursor: var(--cursor-hand); position: relative; top: 0;
-    transition: none; /* Fără tranziții smooth! Instantaneu. */
+    transition: none; 
     border-radius: 0;
     text-shadow: 2px 2px 0px #000;
 }
 .mech-push-btn.wide { width: 90px; }
 
-/* Efect de apăsare: inversăm bordurile */
 .mech-push-btn:active {
     top: 2px;
     border-top: 3px solid rgba(0,0,0,0.8);
@@ -287,36 +272,33 @@ canvas {
 }
 
 .btn-bezel {
-    /* Eliminăm bezelul rotund, îl facem plat */
+    
     background: transparent; padding: 0; border: none; box-shadow: none;
     display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
 
-/* Becuri pătrate */
 .indicator-bulb {
     width: 12px; height: 12px;
-    border-radius: 0; /* Pătrat */
+    border-radius: 0; 
     background: #333;
     border: 2px solid #000;
     box-shadow: inset 1px 1px 0 rgba(255,255,255,0.2);
 }
-/* Glow dur, fără blur mare */
+
 .indicator-bulb.red.on { background: var(--indicator-red); box-shadow: 0 0 4px var(--indicator-red); border-color: var(--indicator-red); }
 .indicator-bulb.yellow.on { background: var(--indicator-amber); box-shadow: 0 0 4px var(--indicator-amber); border-color: var(--indicator-amber); }
 .indicator-bulb.green.on { background: var(--indicator-green); box-shadow: 0 0 4px var(--indicator-green); border-color: var(--indicator-green); }
 
-/* Inputs */
 .mechanical-input {
     background: #000;
     border: 3px solid #333;
-    border-right-color: #555; border-bottom-color: #555; /* Inset inversat */
+    border-right-color: #555; border-bottom-color: #555; 
     color: var(--neon-cyan);
     font-family: var(--font-crt); font-size: 1.2rem;
     width: 80px; padding: 2px; text-align: center;
     border-radius: 0; box-shadow: none;
 }
 
-/* Noise/dither edge on hover for clickables */
 .mech-push-btn, .toggle-switch, .hud-toggle {
     position: relative;
     overflow: hidden;
@@ -337,7 +319,6 @@ canvas {
     opacity: 0.5;
 }
 
-/* --- GAUGE (TIME BUFFER) --- */
 .analog-gauge-container { margin-top: 8px; }
 .gauge-housing {
     position: relative;
@@ -366,41 +347,39 @@ canvas {
 }
 .gauge-remaining.low-time { color: var(--indicator-red); animation: blink 0.5s step-end infinite; }
 
-/* --- CRT MONITOR & TEXT --- */
 .crt-housing-mini {
     width: 260px; height: 180px;
     display: flex; align-items: center; justify-content: center;
     background: #111;
     border: 4px solid #333;
-    box-shadow: 6px 6px 0 #000; /* Hard shadow */
+    box-shadow: 6px 6px 0 #000; 
 }
 .crt-screen-bezel {
     width: 92%; height: 88%; background: #000;
-    border: 8px solid #222; /* Bezel gros plat */
-    border-radius: 4px; /* Foarte puțin rotunjit */
+    border: 8px solid #222; 
+    border-radius: 4px; 
     box-shadow: inset 4px 4px 0 #000;
     position: relative; overflow: hidden;
 }
 .crt-text, .crt-line {
     color: var(--crt-green);
-    /* Glow dur, pixelat */
+    
     text-shadow: 2px 2px 0px rgba(0,0,0,0.8), 0 0 4px rgba(57, 255, 20, 0.7);
     font-family: var(--font-crt);
 }
-.blink-amber { color: var(--indicator-amber); animation: blink 0.8s step-end infinite; } /* step-end pt clipire bruscă */
+.blink-amber { color: var(--indicator-amber); animation: blink 0.8s step-end infinite; } 
 .crt-big-text {
     font-size: 3rem; font-weight: normal; text-align: center; margin-top: 15px;
     color: var(--neon-cyan);
-    /* Efect de text "rupt" prin umbre dure decalate */
+    
     text-shadow: 3px 0px 0 var(--neon-magenta), -3px 0px 0 var(--neon-violet);
 }
 .scanline-overlay {
     background: repeating-linear-gradient(0deg, rgba(0,0,0,0.55) 0px, rgba(0,0,0,0.55) 3px, transparent 3px, transparent 6px);
-    animation: none; /* Scanlines statice, mai retro */
+    animation: none; 
     opacity: 0.85;
 }
 
-/* --- SLIDERS & TOGGLES --- */
 .fader-track-metal {
     height: 14px; background: #000;
     border: 2px solid #555; border-bottom-color: #333; border-right-color: #333;
@@ -410,7 +389,7 @@ canvas {
 .mech-fader::-webkit-slider-thumb {
     -webkit-appearance: none; height: 28px; width: 18px;
     background: #ccc;
-    /* Bevel dur pe fader */
+    
     border-top: 3px solid #fff; border-left: 3px solid #fff;
     border-right: 3px solid #555; border-bottom: 3px solid #555;
     box-shadow: 4px 4px 0 #000;
@@ -441,7 +420,7 @@ canvas {
     transition: none;
 }
 .toggle-switch.active .toggle-handle::after {
-    top: auto; bottom: 4px; /* Mișcare bruscă jos */
+    top: auto; bottom: 4px; 
     background: var(--neon-cyan);
     border-color: var(--neon-cyan);
     box-shadow: 0 0 6px var(--neon-cyan), 0 0 0 2px rgba(0,255,255,0.25);
@@ -456,7 +435,6 @@ canvas {
 .toggle-text { font-family: var(--font-crt); letter-spacing: 0; color: #ddd; text-shadow: 2px 2px 0 #000; }
 .toggle-switch.active .toggle-text { color: var(--neon-cyan); }
 
-/* MODS LAUNCHER & PANEL */
 .mods-launcher { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
 .mods-launcher-row { display: flex; align-items: center; gap: 8px; }
 
@@ -479,19 +457,17 @@ canvas {
 
 body.konami-mode { filter: hue-rotate(60deg) saturate(1.2); }
 
-/* PERFORMANCE MODE - reduce effects for FPS */
 body.perf-mode .console-frame { backdrop-filter: none; box-shadow: 6px 6px 0 rgba(0,0,0,0.7); }
 body.perf-mode .metal-panel { box-shadow: 4px 4px 0 rgba(0,0,0,0.5); }
 body.perf-mode .scanline-overlay { opacity: 0.15; }
 body.perf-mode .mods-backdrop { backdrop-filter: none; }
 body.perf-mode .hud-toggle { box-shadow: 4px 4px 0 rgba(0,0,0,0.7); }
 
-/* --- TEXT & FONTS --- */
 .panel-label, .panel-header-mech, .switch-label, .analysis-row span {
-    font-family: var(--font-crt) !important; /* Folosim doar fontul pixelat */
+    font-family: var(--font-crt) !important; 
     text-transform: uppercase;
     letter-spacing: 1px;
-    text-shadow: 2px 2px 0 #000; /* Umbră dură la text */
+    text-shadow: 2px 2px 0 #000; 
     border: none !important;
 }
 .nixie-text {
@@ -499,11 +475,9 @@ body.perf-mode .hud-toggle { box-shadow: 4px 4px 0 rgba(0,0,0,0.7); }
     text-shadow: 2px 2px 0 #000, 0 0 4px var(--indicator-red);
 }
 
-/* --- MISC & FX --- */
-.rust-overlay, .vignette-heavy { display: none; } /* Scoatem efectele prea smooth */
-.crt-flicker { background: rgba(255, 255, 255, 0.05); animation: flicker 0.05s step-start infinite; } /* Flicker mai agresiv */
+.rust-overlay, .vignette-heavy { display: none; } 
+.crt-flicker { background: rgba(255, 255, 255, 0.05); animation: flicker 0.05s step-start infinite; } 
 
-/* Warning Overlay Pixelat */
 .warning-box {
     border: 4px solid var(--indicator-red); background: #000; color: var(--indicator-red);
     box-shadow: 10px 10px 0 rgba(255,0,0,0.5); transform: none;
@@ -512,7 +486,6 @@ body.perf-mode .hud-toggle { box-shadow: 4px 4px 0 rgba(0,0,0,0.7); }
 .warn-icon { text-shadow: 4px 4px 0 #000; }
 .warn-text { font-family: var(--font-crt); letter-spacing: 2px; text-shadow: 3px 3px 0 #000; animation: blink 0.5s step-end infinite;}
 
-/* Boot overlay stays above HUD */
 #boot-layer { position: fixed; inset: 0; z-index: 900; display: flex; justify-content: center; align-items: center; background: #0b0d14; overflow: hidden; }
 #boot-layer::before { display: none; }
 .boot-bg {
@@ -671,14 +644,11 @@ body.perf-mode .hud-toggle { box-shadow: 4px 4px 0 rgba(0,0,0,0.7); }
 @keyframes flyerK { 0% { transform: translateX(-45vw) translateY(0); } 100% { transform: translateX(125vw) translateY(-6px); } }
 @keyframes flyerL { 0% { transform: translateX(-45vw) translateY(0); } 100% { transform: translateX(125vw) translateY(12px); } }
 
-/* Analysis panel sizing */
 .analysis-panel { width: 440px; max-width: 520px; }
 
-/* Layout adjustments for blocky style */
-.top-left, .top-right, .bottom-left, .bottom-right { transform: scale(1.0); } /* Fără scalare fină */
+.top-left, .top-right, .bottom-left, .bottom-right { transform: scale(1.0); } 
 .corner-group { gap: 20px; }
 
-/* BOOT SCREEN PIXELATED */
 .boot-terminal {
     border: 4px solid #333;
     box-shadow: 8px 8px 0 #000;
@@ -692,8 +662,7 @@ body.perf-mode .hud-toggle { box-shadow: 4px 4px 0 rgba(0,0,0,0.7); }
     border-radius: 0; border: 3px solid #000; background: #f00; top: -10px;
 }
 
-/* ANIMATIONS - STEPPED & JAGGED */
-@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } } /* Clipire bruscă on/off */
+@keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } } 
 @keyframes twitch {
     0% { transform: translate(0,0); }
     2% { transform: translate(4px, 0); }
