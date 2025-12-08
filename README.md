@@ -1,4 +1,4 @@
-# CYBER_OVERLOAD - Audio-Reactive Visualization System
+# Pitch Please - Audio-Reactive Visualization System
 
 A retro-cyberpunk audio visualization engine with real-time harmonograph rendering, beat detection, and interactive visual modes.
 
